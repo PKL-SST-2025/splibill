@@ -31,6 +31,90 @@ export default function AccountPage() {
     { icon: Settings, label: "Account Settings", path: "/accountsettings", submenu: true },
   ];
 
+  // Extended activity data for scrolling demonstration
+  const recentActivities = [
+    {
+      icon: DollarSign,
+      bgColor: "emerald-500/20",
+      iconColor: "emerald-400",
+      title: "Split dinner bill",
+      time: "2 hours ago",
+      amount: "$45.00",
+      status: "Completed",
+      statusColor: "emerald"
+    },
+    {
+      icon: Users,
+      bgColor: "purple-500/20",
+      iconColor: "purple-400",
+      title: "Added new friend",
+      time: "1 day ago",
+      amount: "Sarah",
+      status: "Friend Added",
+      statusColor: "purple"
+    },
+    {
+      icon: Heart,
+      bgColor: "amber-500/20",
+      iconColor: "amber-400",
+      title: "Vacation expenses",
+      time: "3 days ago",
+      amount: "$350.00",
+      status: "Pending",
+      statusColor: "amber"
+    },
+    {
+      icon: Receipt,
+      bgColor: "blue-500/20",
+      iconColor: "blue-400",
+      title: "Grocery split",
+      time: "5 days ago",
+      amount: "$78.50",
+      status: "Completed",
+      statusColor: "emerald"
+    },
+    {
+      icon: CreditCard,
+      bgColor: "pink-500/20",
+      iconColor: "pink-400",
+      title: "Monthly utilities",
+      time: "1 week ago",
+      amount: "$125.00",
+      status: "Paid",
+      statusColor: "emerald"
+    },
+    {
+      icon: Wallet,
+      bgColor: "indigo-500/20",
+      iconColor: "indigo-400",
+      title: "Coffee meetup",
+      time: "1 week ago",
+      amount: "$18.75",
+      status: "Split",
+      statusColor: "emerald"
+    },
+    {
+      icon: Users,
+      bgColor: "teal-500/20",
+      iconColor: "teal-400",
+      title: "Group movie night",
+      time: "2 weeks ago",
+      amount: "$64.00",
+      status: "Completed",
+      statusColor: "emerald"
+    },
+    {
+      icon: DollarSign,
+      bgColor: "orange-500/20",
+      iconColor: "orange-400",
+      title: "Lunch with colleagues",
+      time: "2 weeks ago",
+      amount: "$32.25",
+      status: "Pending",
+      statusColor: "amber"
+    }
+  ];
+
   onMount(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -119,8 +203,6 @@ export default function AccountPage() {
             </div>
           ))}
         </nav>
-
-       
 
         {/* Logout Button */}
         <div class="p-6 pt-0">
@@ -264,7 +346,7 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity - Now Scrollable */}
         <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${
           animate() ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
         }`} style="transition-delay: 1000ms">
@@ -274,68 +356,32 @@ export default function AccountPage() {
             </div>
             <h2 class="text-xl font-bold text-white">Recent Activity</h2>
           </div>
-          <div class="space-y-4">
-            <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                    <DollarSign class="w-5 h-5 text-emerald-400" />
-                  </div>
-                  <div>
-                    <p class="font-semibold text-white">Split dinner bill</p>
-                    <div class="flex items-center gap-2 text-gray-400 text-sm">
-                      <Calendar class="w-4 h-4" />
-                      <span>2 hours ago</span>
+          
+          {/* Scrollable Container */}
+          <div class="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 pr-2">
+            <div class="space-y-4">
+              {recentActivities.map((activity, index) => (
+                <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-3">
+                      <div class={`w-10 h-10 bg-${activity.bgColor} rounded-xl flex items-center justify-center`}>
+                        <activity.icon class={`w-5 h-5 text-${activity.iconColor}`} />
+                      </div>
+                      <div>
+                        <p class="font-semibold text-white">{activity.title}</p>
+                        <div class="flex items-center gap-2 text-gray-400 text-sm">
+                          <Calendar class="w-4 h-4" />
+                          <span>{activity.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <p class={`text-${activity.statusColor}-300 font-bold`}>{activity.amount}</p>
+                      <p class={`text-${activity.statusColor}-400 text-sm`}>{activity.status}</p>
                     </div>
                   </div>
                 </div>
-                <div class="text-right">
-                  <p class="text-emerald-300 font-bold">$45.00</p>
-                  <p class="text-emerald-400 text-sm">Completed</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                    <Users class="w-5 h-5 text-purple-400" />
-                  </div>
-                  <div>
-                    <p class="font-semibold text-white">Added new friend</p>
-                    <div class="flex items-center gap-2 text-gray-400 text-sm">
-                      <Calendar class="w-4 h-4" />
-                      <span>1 day ago</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <p class="text-purple-300 font-bold">Sarah</p>
-                  <p class="text-purple-400 text-sm">Friend Added</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
-                    <Heart class="w-5 h-5 text-amber-400" />
-                  </div>
-                  <div>
-                    <p class="font-semibold text-white">Vacation expenses</p>
-                    <div class="flex items-center gap-2 text-gray-400 text-sm">
-                      <Calendar class="w-4 h-4" />
-                      <span>3 days ago</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <p class="text-amber-300 font-bold">$350.00</p>
-                  <p class="text-amber-400 text-sm">Pending</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
