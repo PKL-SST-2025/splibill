@@ -50,6 +50,26 @@ export default function FriendsPage() {
       lastActivity: "2025-07-09",
       totalBills: 1
     },
+    { 
+      id: 5, 
+      name: "Maya Putri", 
+      avatar: "M", 
+      balance: 180000, 
+      status: "owes_you", 
+      email: "maya@email.com",
+      lastActivity: "2025-07-08",
+      totalBills: 4
+    },
+    { 
+      id: 6, 
+      name: "Rio Permana", 
+      avatar: "R", 
+      balance: -90000, 
+      status: "you_owe", 
+      email: "rio@email.com",
+      lastActivity: "2025-07-07",
+      totalBills: 2
+    },
   ]);
 
   const [recentActivities] = createSignal([
@@ -57,6 +77,10 @@ export default function FriendsPage() {
     { id: 2, friend: "Sari", action: "split", amount: 300000, date: "2025-07-11", description: "Bali Trip Expenses" },
     { id: 3, friend: "Dina", action: "reminder", amount: 75000, date: "2025-07-10", description: "Coffee Meeting" },
     { id: 4, friend: "Andi", action: "settled", amount: 85000, date: "2025-07-09", description: "Team Lunch" },
+    { id: 5, friend: "Maya", action: "paid", amount: 95000, date: "2025-07-08", description: "Movie Night" },
+    { id: 6, friend: "Rio", action: "split", amount: 200000, date: "2025-07-07", description: "Weekend Trip" },
+    { id: 7, friend: "Budi", action: "reminder", amount: 130000, date: "2025-07-06", description: "Restaurant Bill" },
+    { id: 8, friend: "Sari", action: "settled", amount: 45000, date: "2025-07-05", description: "Gas Money" },
   ]);
 
   onMount(() => {
@@ -455,7 +479,7 @@ export default function FriendsPage() {
           </div>
         </div>
 
-        {/* Friends List */}
+        {/* Friends List - Made Scrollable */}
         <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 800ms">
           <div class="flex items-center gap-3 mb-6">
             <div class="p-2 bg-pink-500/20 rounded-xl">
@@ -463,49 +487,52 @@ export default function FriendsPage() {
             </div>
             <h2 class="text-xl font-bold text-white">Your Friends</h2>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <For each={friends()}>
-              {(friend) => (
-                <div class="p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                      <div class="w-12 h-12 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center">
-                        <span class="text-gray-800 font-bold text-lg">{friend.avatar}</span>
+          {/* Scrollable Container */}
+          <div class="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-pink-200/30 hover:scrollbar-thumb-pink-200/50">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <For each={friends()}>
+                {(friend) => (
+                  <div class="p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center">
+                          <span class="text-gray-800 font-bold text-lg">{friend.avatar}</span>
+                        </div>
+                        <div>
+                          <p class="font-semibold text-white">{friend.name}</p>
+                          <p class="text-gray-400 text-sm">{friend.email}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p class="font-semibold text-white">{friend.name}</p>
-                        <p class="text-gray-400 text-sm">{friend.email}</p>
+                      <div class={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBg(friend.status)}`}>
+                        <span class={getStatusColor(friend.status)}>
+                          {friend.status === "owes_you" ? "Owes You" : 
+                           friend.status === "you_owe" ? "You Owe" : "Settled"}
+                        </span>
                       </div>
                     </div>
-                    <div class={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBg(friend.status)}`}>
-                      <span class={getStatusColor(friend.status)}>
-                        {friend.status === "owes_you" ? "Owes You" : 
-                         friend.status === "you_owe" ? "You Owe" : "Settled"}
+                    
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-gray-400 text-sm">Balance:</span>
+                      <span class={`font-bold ${friend.balance > 0 ? 'text-emerald-400' : friend.balance < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                        {friend.balance === 0 ? 'Settled' : `Rp ${Math.abs(friend.balance).toLocaleString()}`}
                       </span>
                     </div>
-                  </div>
-                  
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-gray-400 text-sm">Balance:</span>
-                    <span class={`font-bold ${friend.balance > 0 ? 'text-emerald-400' : friend.balance < 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                      {friend.balance === 0 ? 'Settled' : `Rp ${Math.abs(friend.balance).toLocaleString()}`}
-                    </span>
-                  </div>
-                  
-                  <div class="flex items-center justify-between text-sm text-gray-400">
-                    <div class="flex items-center gap-1">
-                      <Calendar class="w-4 h-4" />
-                      <span>{friend.lastActivity}</span>
+                    
+                    <div class="flex items-center justify-between text-sm text-gray-400">
+                      <div class="flex items-center gap-1">
+                        <Calendar class="w-4 h-4" />
+                        <span>{friend.lastActivity}</span>
+                      </div>
+                      <span>{friend.totalBills} bills</span>
                     </div>
-                    <span>{friend.totalBills} bills</span>
                   </div>
-                </div>
-              )}
-            </For>
+                )}
+              </For>
+            </div>
           </div>
         </div>
 
-        {/* Recent Activities */}
+        {/* Recent Activities - Made Scrollable */}
         <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
           <div class="flex items-center gap-3 mb-6">
             <div class="p-2 bg-amber-500/20 rounded-xl">
@@ -513,40 +540,43 @@ export default function FriendsPage() {
             </div>
             <h2 class="text-xl font-bold text-white">Recent Activities</h2>
           </div>
-          <div class="space-y-4">
-            <For each={recentActivities()}>
-              {(activity) => {
-                const IconComponent = getActivityIcon(activity.action);
-                return (
-                  <div class="p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
-                    <div class="flex items-center justify-between mb-2">
-                      <div class="flex items-center gap-3">
-                        <div class={`w-10 h-10 rounded-xl flex items-center justify-center ${getStatusBg(activity.action)}`}>
-                          <IconComponent class={`w-5 h-5 ${getActivityColor(activity.action)}`} />
+          {/* Scrollable Container */}
+          <div class="max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-pink-200/30 hover:scrollbar-thumb-pink-200/50">
+            <div class="space-y-4">
+              <For each={recentActivities()}>
+                {(activity) => {
+                  const IconComponent = getActivityIcon(activity.action);
+                  return (
+                    <div class="p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                          <div class={`w-10 h-10 rounded-xl flex items-center justify-center ${getStatusBg(activity.action)}`}>
+                            <IconComponent class={`w-5 h-5 ${getActivityColor(activity.action)}`} />
+                          </div>
+                          <div>
+                            <p class="font-semibold text-white">
+                              {activity.friend} {activity.action === "paid" ? "paid you" : 
+                               activity.action === "split" ? "split a bill" :
+                               activity.action === "reminder" ? "received reminder" : "settled up"}
+                            </p>
+                            <p class="text-gray-400 text-sm">{activity.description}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p class="font-semibold text-white">
-                            {activity.friend} {activity.action === "paid" ? "paid you" : 
-                             activity.action === "split" ? "split a bill" :
-                             activity.action === "reminder" ? "received reminder" : "settled up"}
+                        <div class="text-right">
+                          <p class={`font-bold ${getActivityColor(activity.action)}`}>
+                            Rp {activity.amount.toLocaleString()}
                           </p>
-                          <p class="text-gray-400 text-sm">{activity.description}</p>
-                        </div>
-                      </div>
-                      <div class="text-right">
-                        <p class={`font-bold ${getActivityColor(activity.action)}`}>
-                          Rp {activity.amount.toLocaleString()}
-                        </p>
-                        <div class="flex items-center gap-1 text-gray-400 text-sm">
-                          <Calendar class="w-4 h-4" />
-                          <span>{activity.date}</span>
+                          <div class="flex items-center gap-1 text-gray-400 text-sm">
+                            <Calendar class="w-4 h-4" />
+                            <span>{activity.date}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              }}
-            </For>
+                  );
+                }}
+              </For>
+            </div>
           </div>
         </div>
       </main>
