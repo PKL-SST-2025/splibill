@@ -69,9 +69,8 @@ export default function Dashboard() {
     }
   ]);
   
-  // Empty initial data - will be populated when user adds bills and friends
+  // Sample data for demonstration
   const [splitBills, setSplitBills] = createSignal([
-    // Sample data for demonstration
     {
       date: "2025-07-24",
       total: 150000,
@@ -93,7 +92,6 @@ export default function Dashboard() {
   ]);
   
   const [friends, setFriends] = createSignal([
-    // Sample data for demonstration
     {
       name: "John Doe",
       status: "Paid",
@@ -560,7 +558,7 @@ export default function Dashboard() {
       }`}>
         {/* Header */}
         <header class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pt-12 lg:pt-0">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 w-full lg:w-auto">
             {/* Desktop sidebar toggle button */}
             <button
               onClick={toggleSidebar}
@@ -568,14 +566,14 @@ export default function Dashboard() {
             >
               {isSidebarOpen() ? <ChevronLeft class="w-5 h-5" /> : <ChevronRight class="w-5 h-5" />}
             </button>
-            <div>
+            <div class="flex-1">
               <h1 class="text-3xl lg:text-4xl font-black bg-gradient-to-r from-white to-pink-200 bg-clip-text text-transparent">
                 Dashboard
               </h1>
               <p class="text-gray-400 mt-1">Welcome back! Here's your expense overview</p>
             </div>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 w-full lg:w-auto justify-end relative">
             {/* Search Button with Dropdown */}
             <div class="relative">
               <button 
@@ -587,7 +585,7 @@ export default function Dashboard() {
               
               {/* Search Dropdown */}
               {isSearchOpen() && (
-                <div class="search-dropdown absolute right-0 top-full mt-2 w-80 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50">
+                <div class="search-dropdown absolute right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50">
                   <div class="p-4 border-b border-gray-700/50">
                     <div class="relative">
                       <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -625,270 +623,270 @@ export default function Dashboard() {
                         <For each={searchResults()}>
                           {(result) => (
                             <div class="p-3 hover:bg-gray-800/50 rounded-xl cursor-pointer transition-all duration-200">
-                                                              <div class="flex items-center gap-3">
-                                  <div class={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                    result.type === 'bill' 
-                                      ? 'bg-pink-200/10 text-pink-200' 
-                                      : 'bg-blue-200/10 text-blue-200'
-                                  }`}>
-                                    {result.type === 'bill' ? (
-                                      <DollarSign class="w-4 h-4" />
-                                    ) : (
-                                      <User class="w-4 h-4" />
-                                    )}
-                                  </div>
-                                  <div class="flex-1 min-w-0">
-                                    <p class="text-white font-medium truncate">{result.title}</p>
-                                    <p class="text-gray-400 text-sm truncate">{result.subtitle}</p>
-                                  </div>
-                                  {result.type === 'friend' && (
-                                    <span class={`px-2 py-1 rounded-full text-xs font-medium ${
-                                      result.status === "Paid" 
-                                        ? "bg-green-500/20 text-green-400"
-                                        : "bg-yellow-500/20 text-yellow-400"
-                                    }`}>
-                                      {result.status}
-                                    </span>
+                              <div class="flex items-center gap-3">
+                                <div class={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                  result.type === 'bill' 
+                                    ? 'bg-pink-200/10 text-pink-200' 
+                                    : 'bg-blue-200/10 text-blue-200'
+                                }`}>
+                                  {result.type === 'bill' ? (
+                                    <DollarSign class="w-4 h-4" />
+                                  ) : (
+                                    <User class="w-4 h-4" />
                                   )}
                                 </div>
-                              </div>
-                            )}
-                          </For>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Notification Button with Dropdown */}
-              <div class="relative">
-                <button 
-                  class="notification-button relative p-2 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/60 transition-all duration-300"
-                  onClick={() => setIsNotificationOpen(!isNotificationOpen())}
-                >
-                  <Bell class="w-5 h-5" />
-                  {unreadCount() > 0 && (
-                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
-                      {unreadCount()}
-                    </span>
-                  )}
-                </button>
-
-                {/* Notification Dropdown */}
-                {isNotificationOpen() && (
-                  <div class="notification-dropdown absolute right-0 top-full mt-2 w-96 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50">
-                    <div class="p-4 border-b border-gray-700/50 flex items-center justify-between">
-                      <h3 class="text-lg font-bold text-white">Notifications</h3>
-                      {unreadCount() > 0 && (
-                        <button
-                          onClick={markAllAsRead}
-                          class="text-sm text-pink-200 hover:text-pink-100 transition-colors duration-200"
-                        >
-                          Mark all as read
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div class="max-h-80 overflow-y-auto">
-                      {notifications().length === 0 ? (
-                        <div class="p-6 text-center text-gray-400">
-                          <Bell class="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p>No notifications yet</p>
-                        </div>
-                      ) : (
-                        <div class="p-2">
-                          <For each={notifications()}>
-                            {(notification) => {
-                              const IconComponent = getNotificationIcon(notification.icon);
-                              return (
-                                <div 
-                                  class={`p-4 hover:bg-gray-800/50 rounded-xl cursor-pointer transition-all duration-200 border-l-4 ${
-                                    !notification.read 
-                                      ? 'border-pink-200 bg-gray-800/20' 
-                                      : 'border-transparent'
-                                  }`}
-                                  onClick={() => markNotificationAsRead(notification.id)}
-                                >
-                                  <div class="flex items-start gap-3">
-                                    <div class={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${getNotificationColor(notification.type)}`}>
-                                      <IconComponent class="w-4 h-4" />
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                      <div class="flex items-center gap-2 mb-1">
-                                        <p class="text-white font-medium">{notification.title}</p>
-                                        {!notification.read && (
-                                          <div class="w-2 h-2 bg-pink-200 rounded-full flex-shrink-0" />
-                                        )}
-                                      </div>
-                                      <p class="text-gray-400 text-sm leading-relaxed">{notification.message}</p>
-                                      <p class="text-gray-500 text-xs mt-1">{notification.time}</p>
-                                    </div>
-                                  </div>
+                                <div class="flex-1 min-w-0">
+                                  <p class="text-white font-medium truncate">{result.title}</p>
+                                  <p class="text-gray-400 text-sm truncate">{result.subtitle}</p>
                                 </div>
-                              );
-                            }}
-                          </For>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {notifications().length > 0 && (
-                      <div class="p-4 border-t border-gray-700/50">
-                        <button class="w-full text-center text-pink-200 hover:text-pink-100 text-sm font-medium transition-colors duration-200">
-                          View all notifications
-                        </button>
+                                {result.type === 'friend' && (
+                                  <span class={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    result.status === "Paid" 
+                                      ? "bg-green-500/20 text-green-400"
+                                      : "bg-yellow-500/20 text-yellow-400"
+                                  }`}>
+                                    {result.status}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </For>
                       </div>
                     )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
+            {/* Notification Button with Dropdown */}
+            <div class="relative">
               <button 
-                class="bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-6 py-3 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
-                onClick={() => navigate("/addsplitbill")}
+                class="notification-button relative p-2 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/60 transition-all duration-300"
+                onClick={() => setIsNotificationOpen(!isNotificationOpen())}
               >
-                + Add Bill
+                <Bell class="w-5 h-5" />
+                {unreadCount() > 0 && (
+                  <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                    {unreadCount()}
+                  </span>
+                )}
               </button>
-            </div>
-          </header>
 
-          {/* Stats Cards */}
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group">
-              <div class="flex items-center justify-between mb-4">
-                <div class="p-3 bg-pink-200/10 rounded-xl">
-                  <Wallet class="w-6 h-6 text-pink-200" />
+              {/* Notification Dropdown */}
+              {isNotificationOpen() && (
+                <div class="notification-dropdown absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50">
+                  <div class="p-4 border-b border-gray-700/50 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white">Notifications</h3>
+                    {unreadCount() > 0 && (
+                      <button
+                        onClick={markAllAsRead}
+                        class="text-sm text-pink-200 hover:text-pink-100 transition-colors duration-200"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div class="max-h-80 overflow-y-auto">
+                    {notifications().length === 0 ? (
+                      <div class="p-6 text-center text-gray-400">
+                        <Bell class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>No notifications yet</p>
+                      </div>
+                    ) : (
+                      <div class="p-2">
+                        <For each={notifications()}>
+                          {(notification) => {
+                            const IconComponent = getNotificationIcon(notification.icon);
+                            return (
+                              <div 
+                                class={`p-4 hover:bg-gray-800/50 rounded-xl cursor-pointer transition-all duration-200 border-l-4 ${
+                                  !notification.read 
+                                    ? 'border-pink-200 bg-gray-800/20' 
+                                    : 'border-transparent'
+                                }`}
+                                onClick={() => markNotificationAsRead(notification.id)}
+                              >
+                                <div class="flex items-start gap-3">
+                                  <div class={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${getNotificationColor(notification.type)}`}>
+                                    <IconComponent class="w-4 h-4" />
+                                  </div>
+                                  <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                      <p class="text-white font-medium">{notification.title}</p>
+                                      {!notification.read && (
+                                        <div class="w-2 h-2 bg-pink-200 rounded-full flex-shrink-0" />
+                                      )}
+                                    </div>
+                                    <p class="text-gray-400 text-sm leading-relaxed">{notification.message}</p>
+                                    <p class="text-gray-500 text-xs mt-1">{notification.time}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }}
+                        </For>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {notifications().length > 0 && (
+                    <div class="p-4 border-t border-gray-700/50">
+                      <button class="w-full text-center text-pink-200 hover:text-pink-100 text-sm font-medium transition-colors duration-200">
+                        View all notifications
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <span class="text-gray-500 text-sm font-medium">--</span>
-              </div>
-              <h3 class="text-2xl font-bold text-white">Rp {totalExpenses().toLocaleString()}</h3>
-              <p class="text-gray-400 text-sm">Total Expenses</p>
+              )}
             </div>
 
-            <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group">
-              <div class="flex items-center justify-between mb-4">
-                <div class="p-3 bg-pink-200/10 rounded-xl">
-                  <Clock class="w-6 h-6 text-pink-200" />
-                </div>
-                <span class="text-gray-500 text-sm font-medium">{pendingPayments()} pending</span>
-              </div>
-              <h3 class="text-2xl font-bold text-white">{friends().length}</h3>
-              <p class="text-gray-400 text-sm">Active Friends</p>
-            </div>
+            <button 
+              class="bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-6 py-3 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
+              onClick={() => navigate("/addsplitbill")}
+            >
+              + Add Bill
+            </button>
+          </div>
+        </header>
 
-            <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group md:col-span-2 lg:col-span-1">
-              <div class="flex items-center justify-between mb-4">
-                <div class="p-3 bg-pink-200/10 rounded-xl">
-                  <TrendingUp class="w-6 h-6 text-pink-200" />
-                </div>
-                <span class="text-gray-500 text-sm font-medium">Today</span>
+        {/* Stats Cards */}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-pink-200/10 rounded-xl">
+                <Wallet class="w-6 h-6 text-pink-200" />
               </div>
-              <h3 class="text-2xl font-bold text-white">{todayBills().length}</h3>
-              <p class="text-gray-400 text-sm">Today's Bills</p>
+              <span class="text-gray-500 text-sm font-medium">--</span>
             </div>
+            <h3 class="text-2xl font-bold text-white">Rp {totalExpenses().toLocaleString()}</h3>
+            <p class="text-gray-400 text-sm">Total Expenses</p>
           </div>
 
-          {/* Chart Section */}
-          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-bold text-white">Expense Trend</h2>
-              <div class="flex items-center gap-2 text-sm text-gray-400">
-                <div class="w-3 h-3 bg-pink-200 rounded-full" />
-                <span>Split Bills</span>
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-pink-200/10 rounded-xl">
+                <Clock class="w-6 h-6 text-pink-200" />
+              </div>
+              <span class="text-gray-500 text-sm font-medium">{pendingPayments()} pending</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white">{friends().length}</h3>
+            <p class="text-gray-400 text-sm">Active Friends</p>
+          </div>
+
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group md:col-span-2 lg:col-span-1">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-pink-200/10 rounded-xl">
+                <TrendingUp class="w-6 h-6 text-pink-200" />
+              </div>
+              <span class="text-gray-500 text-sm font-medium">Today</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white">{todayBills().length}</h3>
+            <p class="text-gray-400 text-sm">Today's Bills</p>
+          </div>
+        </div>
+
+        {/* Chart Section */}
+        <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-white">Expense Trend</h2>
+            <div class="flex items-center gap-2 text-sm text-gray-400">
+              <div class="w-3 h-3 bg-pink-200 rounded-full" />
+              <span>Split Bills</span>
+            </div>
+          </div>
+          {splitBills().length > 0 ? (
+            <div id="chartdiv" class="w-full h-80 rounded-xl overflow-hidden" />
+          ) : (
+            <div class="w-full h-80 rounded-xl bg-gray-800/30 border-2 border-dashed border-gray-600/50 flex items-center justify-center">
+              <div class="text-center">
+                <TrendingUp class="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <p class="text-gray-400 text-lg mb-2">No expense data yet</p>
+                <p class="text-gray-500 text-sm">Add your first split bill to see the expense trend</p>
               </div>
             </div>
+          )}
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Activities */}
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300">
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <CalendarDays class="w-5 h-5 text-pink-200" />
+              Recent Activities
+            </h2>
             {splitBills().length > 0 ? (
-              <div id="chartdiv" class="w-full h-80 rounded-xl overflow-hidden" />
+              <div class="space-y-4">
+                <For each={splitBills().slice(0, 4)}>
+                  {(bill) => (
+                    <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-pink-200/10 rounded-xl flex items-center justify-center">
+                          <Wallet class="w-5 h-5 text-pink-200" />
+                        </div>
+                        <div>
+                          <p class="font-medium text-white">{bill.description}</p>
+                          <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </div>
             ) : (
-              <div class="w-full h-80 rounded-xl bg-gray-800/30 border-2 border-dashed border-gray-600/50 flex items-center justify-center">
-                <div class="text-center">
-                  <TrendingUp class="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p class="text-gray-400 text-lg mb-2">No expense data yet</p>
-                  <p class="text-gray-500 text-sm">Add your first split bill to see the expense trend</p>
-                </div>
+              <div class="text-center py-12">
+                <CalendarDays class="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <p class="text-gray-400 text-lg mb-2">No recent activities</p>
+                <p class="text-gray-500 text-sm mb-4">Start by adding your first split bill</p>
               </div>
             )}
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Activities */}
-            <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300">
-              <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <CalendarDays class="w-5 h-5 text-pink-200" />
-                Recent Activities
-              </h2>
-              {splitBills().length > 0 ? (
-                <div class="space-y-4">
-                  <For each={splitBills().slice(0, 4)}>
-                    {(bill) => (
-                      <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
-                        <div class="flex items-center gap-3">
-                          <div class="w-10 h-10 bg-pink-200/10 rounded-xl flex items-center justify-center">
-                            <Wallet class="w-5 h-5 text-pink-200" />
-                          </div>
-                          <div>
-                            <p class="font-medium text-white">{bill.description}</p>
-                            <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
-                          </div>
+          {/* Friends List */}
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300">
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Users class="w-5 h-5 text-pink-200" />
+              Friends Status
+            </h2>
+            {friends().length > 0 ? (
+              <div class="space-y-4">
+                <For each={friends()}>
+                  {(friend) => (
+                    <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center">
+                          <span class="text-gray-800 font-bold text-sm">{friend.avatar}</span>
                         </div>
-                        <div class="text-right">
-                          <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
+                        <div>
+                          <p class="font-medium text-white">{friend.name}</p>
+                          <p class="text-sm text-gray-400">Rp {friend.amount.toLocaleString()}</p>
                         </div>
                       </div>
-                    )}
-                  </For>
-                </div>
-              ) : (
-                <div class="text-center py-12">
-                  <CalendarDays class="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p class="text-gray-400 text-lg mb-2">No recent activities</p>
-                  <p class="text-gray-500 text-sm mb-4">Start by adding your first split bill</p>
-                </div>
-              )}
-            </div>
-
-            {/* Friends List */}
-            <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300">
-              <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <Users class="w-5 h-5 text-pink-200" />
-                Friends Status
-              </h2>
-              {friends().length > 0 ? (
-                <div class="space-y-4">
-                  <For each={friends()}>
-                    {(friend) => (
-                      <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
-                        <div class="flex items-center gap-3">
-                          <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center">
-                            <span class="text-gray-800 font-bold text-sm">{friend.avatar}</span>
-                          </div>
-                          <div>
-                            <p class="font-medium text-white">{friend.name}</p>
-                            <p class="text-sm text-gray-400">Rp {friend.amount.toLocaleString()}</p>
-                          </div>
-                        </div>
-                        <span class={`px-3 py-1 rounded-full text-xs font-medium ${
-                          friend.status === "Paid" 
-                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                            : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                        }`}>
-                          {friend.status}
-                        </span>
-                      </div>
-                    )}
-                  </For>
-                </div>
-              ) : (
-                <div class="text-center py-12">
-                  <Users class="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p class="text-gray-400 text-lg mb-2">No friends added yet</p>
-                  <p class="text-gray-500 text-sm mb-4">Add friends to start splitting bills together</p>
-                </div>
-              )}
-            </div>
+                      <span class={`px-3 py-1 rounded-full text-xs font-medium ${
+                        friend.status === "Paid" 
+                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                          : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                      }`}>
+                        {friend.status}
+                      </span>
+                    </div>
+                  )}
+                </For>
+              </div>
+            ) : (
+              <div class="text-center py-12">
+                <Users class="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <p class="text-gray-400 text-lg mb-2">No friends added yet</p>
+                <p class="text-gray-500 text-sm mb-4">Add friends to start splitting bills together</p>
+              </div>
+            )}
           </div>
-        </main>
-      </div>
-    );
-  }
+        </div>
+      </main>
+    </div>
+  );
+}
