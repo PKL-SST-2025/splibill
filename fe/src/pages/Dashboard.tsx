@@ -13,19 +13,20 @@ export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = createSignal(true);
   const [isMobile, setIsMobile] = createSignal(false);
   const [selectedDate, setSelectedDate] = createSignal(new Date());
-  const [splitBills, setSplitBills] = createSignal([
-    { date: "2025-07-12", total: 45000, description: "Dinner at Cafe", participants: 4 },
-    { date: "2025-07-11", total: 60000, description: "Movie Night", participants: 3 },
-    { date: "2025-07-10", total: 30000, description: "Lunch", participants: 2 },
-    { date: "2025-07-09", total: 80000, description: "Shopping", participants: 5 },
-    
-  ]);
-  const [friends, setFriends] = createSignal([
-    { name: "Dina", status: "Waiting", avatar: "D", amount: 15000 },
-    { name: "Ali", status: "Paid", avatar: "A", amount: 22500 },
-    { name: "Sarah", status: "Waiting", avatar: "S", amount: 18000 },
-    { name: "Kevin", status: "Paid", avatar: "K", amount: 12000 },
-  ]);
+  
+  // Empty initial data - will be populated when user adds bills and friends
+  const [splitBills, setSplitBills] = createSignal<Array<{
+    date: string;
+    total: number;
+    description: string;
+    participants: number;
+  }>>([]);
+  const [friends, setFriends] = createSignal<Array<{
+    name: string;
+    status: string;
+    avatar: string;
+    amount: number;
+  }>>([]);
 
   // Check if mobile on mount and window resize
   onMount(() => {
@@ -49,6 +50,7 @@ export default function Dashboard() {
     chart.background.fill = am4core.color("#1f2937");
     chart.plotContainer.background.fill = am4core.color("#1f2937");
 
+    // Empty data initially - chart will update when bills are added
     chart.data = splitBills().map((bill) => ({
       date: new Date(bill.date),
       value: bill.total,
@@ -76,6 +78,16 @@ export default function Dashboard() {
     bullet.circle.stroke = am4core.color("#ffffff");
     bullet.circle.strokeWidth = 2;
 
+    // Update chart when splitBills changes
+    createEffect(() => {
+      if (chart && splitBills().length > 0) {
+        chart.data = splitBills().map((bill) => ({
+          date: new Date(bill.date),
+          value: bill.total,
+        }));
+      }
+    });
+
     return () => {
       chart.dispose();
       window.removeEventListener('resize', checkMobile);
@@ -91,16 +103,16 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-  // Add logout logic here - clear auth tokens, redirect to login, etc.
-  if (confirm("Are you sure you want to log out?")) {
-    // Clear any stored authentication data
-    // localStorage.removeItem('auth_token'); // if using localStorage
-    // sessionStorage.clear(); // if using sessionStorage
-    
-    // Redirect to login page
-    navigate("/login");
-  }
-};
+    // Add logout logic here - clear auth tokens, redirect to login, etc.
+    if (confirm("Are you sure you want to log out?")) {
+      // Clear any stored authentication data
+      // localStorage.removeItem('auth_token'); // if using localStorage
+      // sessionStorage.clear(); // if using sessionStorage
+      
+      // Redirect to login page
+      navigate("/login");
+    }
+  };
 
   const totalExpenses = () => splitBills().reduce((sum, bill) => sum + bill.total, 0);
   const pendingPayments = () => friends().filter(f => f.status === "Waiting").length;
@@ -116,9 +128,9 @@ export default function Dashboard() {
     <div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex relative overflow-hidden">
       {/* Animated background elements */}
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-4 -right-4 w-72 h-72 bg-pink-200/5 rounded-full blur-3xl animate-pulse"></div>
-        <div class="absolute -bottom-8 -left-8 w-96 h-96 bg-pink-300/3 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div class="absolute top-1/3 right-1/4 w-64 h-64 bg-pink-200/4 rounded-full blur-2xl animate-pulse delay-500"></div>
+        <div class="absolute -top-4 -right-4 w-72 h-72 bg-pink-200/5 rounded-full blur-3xl animate-pulse" />
+        <div class="absolute -bottom-8 -left-8 w-96 h-96 bg-pink-300/3 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div class="absolute top-1/3 right-1/4 w-64 h-64 bg-pink-200/4 rounded-full blur-2xl animate-pulse delay-500" />
       </div>
 
       {/* Mobile menu button */}
@@ -170,7 +182,7 @@ export default function Dashboard() {
             {!isSidebarOpen() && !isMobile() && (
               <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                 Dashboard
-                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
               </div>
             )}
           </div>
@@ -191,7 +203,7 @@ export default function Dashboard() {
             {!isSidebarOpen() && !isMobile() && (
               <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                 Finance
-                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
               </div>
             )}
           </div>
@@ -212,12 +224,12 @@ export default function Dashboard() {
             {!isSidebarOpen() && !isMobile() && (
               <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                 Add Split Bill
-                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
               </div>
             )}
           </div>
 
-           {/* Pay Bill */}
+          {/* Pay Bill */}
           <div class="relative group">
             <button 
               onClick={() => navigate("/paybill")} 
@@ -233,13 +245,12 @@ export default function Dashboard() {
             {!isSidebarOpen() && !isMobile() && (
               <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                 Pay Bill
-                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
               </div>
             )}
           </div>
 
           {/* Friends */}
-        
           <div class="relative group">
             <button 
               onClick={() => navigate("/friends")} 
@@ -256,94 +267,98 @@ export default function Dashboard() {
             {!isSidebarOpen() && !isMobile() && (
               <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                 Friends
-                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
               </div>
             )}
           </div>
+
           {/* Add Friend */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/addfriend")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <UserPlus class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Add Friend</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Add Friend
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/account")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <User class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account Settings - Submenu */}
-<div class="relative group ml-4">
-  <button 
-    onClick={() => navigate("/accountsettings")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <Settings class="w-4 h-4 flex-shrink-0" />
-    <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account Settings</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account Settings
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/addfriend")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <UserPlus class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Add Friend</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Add Friend
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
+              </div>
+            )}
+          </div>
+
+          {/* Account */}
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/account")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <User class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
+              </div>
+            )}
+          </div>
+
+          {/* Account Settings - Submenu */}
+          <div class="relative group ml-4">
+            <button 
+              onClick={() => navigate("/accountsettings")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <Settings class="w-4 h-4 flex-shrink-0" />
+              <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account Settings</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account Settings
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
+              </div>
+            )}
+          </div>
         </nav>
 
-       
         {/* Logout Button */}
-<div class="relative group">
-  <button 
-    onClick={handleLogout} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <LogOut class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Log Out</span>
-  </button>
-  {/* Tooltip untuk collapsed state */}
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Log Out
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+        <div class="p-6">
+          <div class="relative group">
+            <button 
+              onClick={handleLogout} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <LogOut class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Log Out</span>
+            </button>
+            {/* Tooltip untuk collapsed state */}
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Log Out
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800" />
+              </div>
+            )}
+          </div>
+        </div>
       </aside>
 
       {/* Overlay for mobile */}
@@ -398,7 +413,7 @@ export default function Dashboard() {
               <div class="p-3 bg-pink-200/10 rounded-xl">
                 <Wallet class="w-6 h-6 text-pink-200" />
               </div>
-              <span class="text-green-400 text-sm font-medium">+12.5%</span>
+              <span class="text-gray-500 text-sm font-medium">--</span>
             </div>
             <h3 class="text-2xl font-bold text-white">Rp {totalExpenses().toLocaleString()}</h3>
             <p class="text-gray-400 text-sm">Total Expenses</p>
@@ -409,7 +424,7 @@ export default function Dashboard() {
               <div class="p-3 bg-pink-200/10 rounded-xl">
                 <Clock class="w-6 h-6 text-pink-200" />
               </div>
-              <span class="text-yellow-400 text-sm font-medium">{pendingPayments()} pending</span>
+              <span class="text-gray-500 text-sm font-medium">{pendingPayments()} pending</span>
             </div>
             <h3 class="text-2xl font-bold text-white">{friends().length}</h3>
             <p class="text-gray-400 text-sm">Active Friends</p>
@@ -420,7 +435,7 @@ export default function Dashboard() {
               <div class="p-3 bg-pink-200/10 rounded-xl">
                 <TrendingUp class="w-6 h-6 text-pink-200" />
               </div>
-              <span class="text-blue-400 text-sm font-medium">This month</span>
+              <span class="text-gray-500 text-sm font-medium">Today</span>
             </div>
             <h3 class="text-2xl font-bold text-white">{todayBills().length}</h3>
             <p class="text-gray-400 text-sm">Today's Bills</p>
@@ -432,11 +447,21 @@ export default function Dashboard() {
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-bold text-white">Expense Trend</h2>
             <div class="flex items-center gap-2 text-sm text-gray-400">
-              <div class="w-3 h-3 bg-pink-200 rounded-full"></div>
+              <div class="w-3 h-3 bg-pink-200 rounded-full" />
               <span>Split Bills</span>
             </div>
           </div>
-          <div id="chartdiv" class="w-full h-80 rounded-xl overflow-hidden" />
+          {splitBills().length > 0 ? (
+            <div id="chartdiv" class="w-full h-80 rounded-xl overflow-hidden" />
+          ) : (
+            <div class="w-full h-80 rounded-xl bg-gray-800/30 border-2 border-dashed border-gray-600/50 flex items-center justify-center">
+              <div class="text-center">
+                <TrendingUp class="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <p class="text-gray-400 text-lg mb-2">No expense data yet</p>
+                <p class="text-gray-500 text-sm">Add your first split bill to see the expense trend</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -446,26 +471,35 @@ export default function Dashboard() {
               <CalendarDays class="w-5 h-5 text-pink-200" />
               Recent Activities
             </h2>
-            <div class="space-y-4">
-              <For each={splitBills().slice(0, 4)}>
-                {(bill) => (
-                  <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 bg-pink-200/10 rounded-xl flex items-center justify-center">
-                        <Wallet class="w-5 h-5 text-pink-200" />
+            {splitBills().length > 0 ? (
+              <div class="space-y-4">
+                <For each={splitBills().slice(0, 4)}>
+                  {(bill) => (
+                    <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-pink-200/10 rounded-xl flex items-center justify-center">
+                          <Wallet class="w-5 h-5 text-pink-200" />
+                        </div>
+                        <div>
+                          <p class="font-medium text-white">{bill.description}</p>
+                          <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
+                        </div>
                       </div>
-                      <div>
-                        <p class="font-medium text-white">{bill.description}</p>
-                        <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
+                      <div class="text-right">
+                        <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
                       </div>
                     </div>
-                    <div class="text-right">
-                      <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
-                    </div>
-                  </div>
-                )}
-              </For>
-            </div>
+                  )}
+                </For>
+              </div>
+            ) : (
+              <div class="text-center py-12">
+                <CalendarDays class="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <p class="text-gray-400 text-lg mb-2">No recent activities</p>
+                <p class="text-gray-500 text-sm mb-4">Start by adding your first split bill</p>
+                
+              </div>
+            )}
           </div>
 
           {/* Friends List */}
@@ -474,30 +508,39 @@ export default function Dashboard() {
               <Users class="w-5 h-5 text-pink-200" />
               Friends Status
             </h2>
-            <div class="space-y-4">
-              <For each={friends()}>
-                {(friend) => (
-                  <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center">
-                        <span class="text-gray-800 font-bold text-sm">{friend.avatar}</span>
+            {friends().length > 0 ? (
+              <div class="space-y-4">
+                <For each={friends()}>
+                  {(friend) => (
+                    <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center">
+                          <span class="text-gray-800 font-bold text-sm">{friend.avatar}</span>
+                        </div>
+                        <div>
+                          <p class="font-medium text-white">{friend.name}</p>
+                          <p class="text-sm text-gray-400">Rp {friend.amount.toLocaleString()}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p class="font-medium text-white">{friend.name}</p>
-                        <p class="text-sm text-gray-400">Rp {friend.amount.toLocaleString()}</p>
-                      </div>
+                      <span class={`px-3 py-1 rounded-full text-xs font-medium ${
+                        friend.status === "Paid" 
+                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                          : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                      }`}>
+                        {friend.status}
+                      </span>
                     </div>
-                    <span class={`px-3 py-1 rounded-full text-xs font-medium ${
-                      friend.status === "Paid" 
-                        ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                        : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                    }`}>
-                      {friend.status}
-                    </span>
-                  </div>
-                )}
-              </For>
-            </div>
+                  )}
+                </For>
+              </div>
+            ) : (
+              <div class="text-center py-12">
+                <Users class="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <p class="text-gray-400 text-lg mb-2">No friends added yet</p>
+                <p class="text-gray-500 text-sm mb-4">Add friends to start splitting bills together</p>
+               
+              </div>
+            )}
           </div>
         </div>
       </main>
