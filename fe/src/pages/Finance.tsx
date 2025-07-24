@@ -8,18 +8,27 @@ export default function FinancePage() {
   const [isMobile, setIsMobile] = createSignal(false);
   const [animate, setAnimate] = createSignal(false);
   
-  // Sample data
+  // Sample data - Extended for better scrolling demonstration
   const [transactions] = createSignal([
     { id: 1, title: "Dinner at Sushi Tei", date: "2025-07-12", amount: -120000, type: "expense", icon: DollarSign },
     { id: 2, title: "Split Bill - Bali Trip", date: "2025-07-11", amount: -300000, type: "expense", icon: Heart },
     { id: 3, title: "Coffee Meeting", date: "2025-07-10", amount: -45000, type: "expense", icon: CreditCard },
     { id: 4, title: "Lunch with Team", date: "2025-07-09", amount: -85000, type: "expense", icon: DollarSign },
+    { id: 5, title: "Movie Night", date: "2025-07-08", amount: -60000, type: "expense", icon: Heart },
+    { id: 6, title: "Grocery Shopping", date: "2025-07-07", amount: -150000, type: "expense", icon: CreditCard },
+    { id: 7, title: "Gas Station", date: "2025-07-06", amount: -75000, type: "expense", icon: DollarSign },
+    { id: 8, title: "Restaurant Bill", date: "2025-07-05", amount: -95000, type: "expense", icon: Heart },
   ]);
 
   const [waitingPayments] = createSignal([
     { name: "Budi", amount: 250000, avatar: "B" },
     { name: "Sari", amount: 150000, avatar: "S" },
     { name: "Dina", amount: 75000, avatar: "D" },
+    { name: "Ahmad", amount: 180000, avatar: "A" },
+    { name: "Maya", amount: 220000, avatar: "M" },
+    { name: "Rizki", amount: 90000, avatar: "R" },
+    { name: "Luna", amount: 130000, avatar: "L" },
+    { name: "Fajar", amount: 170000, avatar: "F" },
   ]);
 
   onMount(() => {
@@ -401,18 +410,25 @@ export default function FinancePage() {
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Waiting Payments */}
+          {/* Waiting Payments - Now Scrollable */}
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="p-2 bg-amber-500/20 rounded-xl">
-                <Users class="w-5 h-5 text-amber-400" />
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-amber-500/20 rounded-xl">
+                  <Users class="w-5 h-5 text-amber-400" />
+                </div>
+                <h2 class="text-xl font-bold text-white">Waiting Payments</h2>
               </div>
-              <h2 class="text-xl font-bold text-white">Waiting Payments</h2>
+              <div class="text-sm text-gray-400">
+                {waitingPayments().length} payments
+              </div>
             </div>
-            <div class="space-y-4">
+            
+            {/* Scrollable container with custom scrollbar */}
+            <div class="max-h-80 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50">
               <For each={waitingPayments()}>
                 {(payment) => (
-                  <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                  <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-[1.02]">
                     <div class="flex items-center gap-3">
                       <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
                         <span class="text-white font-bold">{payment.avatar}</span>
@@ -429,18 +445,25 @@ export default function FinancePage() {
             </div>
           </div>
 
-          {/* Latest Transactions */}
+          {/* Latest Transactions - Now Scrollable */}
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1200ms">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="p-2 bg-emerald-500/20 rounded-xl">
-                <CreditCard class="w-5 h-5 text-emerald-400" />
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-500/20 rounded-xl">
+                  <CreditCard class="w-5 h-5 text-emerald-400" />
+                </div>
+                <h2 class="text-xl font-bold text-white">Latest Transactions</h2>
               </div>
-              <h2 class="text-xl font-bold text-white">Latest Transactions</h2>
+              <div class="text-sm text-gray-400">
+                {transactions().length} transactions
+              </div>
             </div>
-            <div class="space-y-4">
+            
+            {/* Scrollable container with custom scrollbar */}
+            <div class="max-h-80 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50">
               <For each={transactions()}>
                 {(transaction) => (
-                  <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
+                  <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-[1.02]">
                     <div class="flex items-center justify-between mb-2">
                       <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
