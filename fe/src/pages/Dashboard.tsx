@@ -69,7 +69,7 @@ export default function Dashboard() {
     }
   ]);
   
-  // Sample data for demonstration
+  // Extended sample data for demonstration of scrolling
   const [splitBills, setSplitBills] = createSignal([
     {
       date: "2025-07-24",
@@ -88,9 +88,40 @@ export default function Dashboard() {
       total: 200000,
       description: "Movie Night",
       participants: 5
+    },
+    {
+      date: "2025-07-21",
+      total: 120000,
+      description: "Coffee Shop Meet-up",
+      participants: 3
+    },
+    {
+      date: "2025-07-20",
+      total: 300000,
+      description: "Birthday Party Expenses",
+      participants: 8
+    },
+    {
+      date: "2025-07-19",
+      total: 85000,
+      description: "Lunch at Sushi Place",
+      participants: 4
+    },
+    {
+      date: "2025-07-18",
+      total: 180000,
+      description: "Weekend Trip Gas & Tolls",
+      participants: 6
+    },
+    {
+      date: "2025-07-17",
+      total: 95000,
+      description: "Karaoke Night",
+      participants: 5
     }
   ]);
   
+  // Extended friends list for demonstration of scrolling
   const [friends, setFriends] = createSignal([
     {
       name: "John Doe",
@@ -109,6 +140,48 @@ export default function Dashboard() {
       status: "Paid",  
       avatar: "MJ",
       amount: 40000
+    },
+    {
+      name: "Emma Davis",
+      status: "Waiting",
+      avatar: "ED",
+      amount: 62500
+    },
+    {
+      name: "Alex Chen",
+      status: "Paid",
+      avatar: "AC",
+      amount: 45000
+    },
+    {
+      name: "Lisa Brown",
+      status: "Waiting",
+      avatar: "LB",
+      amount: 80000
+    },
+    {
+      name: "David Miller",
+      status: "Paid",
+      avatar: "DM",
+      amount: 55000
+    },
+    {
+      name: "Jessica Taylor",
+      status: "Waiting",
+      avatar: "JT",
+      amount: 90000
+    },
+    {
+      name: "Ryan Garcia",
+      status: "Paid",
+      avatar: "RG",
+      amount: 35000
+    },
+    {
+      name: "Sophie Lee",
+      status: "Waiting",
+      avatar: "SL",
+      amount: 70000
     }
   ]);
 
@@ -558,7 +631,7 @@ export default function Dashboard() {
       }`}>
         {/* Header */}
         <header class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pt-12 lg:pt-0">
-          <div class="flex items-center gap-2 w-full lg:w-auto">
+          <div class="flex items-center gap-2">
             {/* Desktop sidebar toggle button */}
             <button
               onClick={toggleSidebar}
@@ -566,14 +639,14 @@ export default function Dashboard() {
             >
               {isSidebarOpen() ? <ChevronLeft class="w-5 h-5" /> : <ChevronRight class="w-5 h-5" />}
             </button>
-            <div class="flex-1">
+            <div>
               <h1 class="text-3xl lg:text-4xl font-black bg-gradient-to-r from-white to-pink-200 bg-clip-text text-transparent">
                 Dashboard
               </h1>
               <p class="text-gray-400 mt-1">Welcome back! Here's your expense overview</p>
             </div>
           </div>
-          <div class="flex items-center gap-3 w-full lg:w-auto justify-end relative">
+          <div class="flex items-center gap-3">
             {/* Search Button with Dropdown */}
             <div class="relative">
               <button 
@@ -585,7 +658,7 @@ export default function Dashboard() {
               
               {/* Search Dropdown */}
               {isSearchOpen() && (
-                <div class="search-dropdown absolute right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50">
+                <div class="search-dropdown absolute right-0 top-full mt-2 w-80 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50">
                   <div class="p-4 border-b border-gray-700/50">
                     <div class="relative">
                       <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -675,7 +748,7 @@ export default function Dashboard() {
 
               {/* Notification Dropdown */}
               {isNotificationOpen() && (
-                <div class="notification-dropdown absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50">
+                <div class="notification-dropdown absolute right-0 top-full mt-2 w-96 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50">
                   <div class="p-4 border-b border-gray-700/50 flex items-center justify-between">
                     <h3 class="text-lg font-bold text-white">Notifications</h3>
                     {unreadCount() > 0 && (
@@ -810,78 +883,130 @@ export default function Dashboard() {
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activities */}
-          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300">
-            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <CalendarDays class="w-5 h-5 text-pink-200" />
-              Recent Activities
-            </h2>
+          {/* Recent Activities with Scrollable Content */}
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 flex flex-col">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <CalendarDays class="w-5 h-5 text-pink-200" />
+                Recent Activities
+              </h2>
+              <span class="text-sm text-gray-400">
+                {splitBills().length} bills
+              </span>
+            </div>
+            
             {splitBills().length > 0 ? (
-              <div class="space-y-4">
-                <For each={splitBills().slice(0, 4)}>
-                  {(bill) => (
-                    <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
-                      <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-pink-200/10 rounded-xl flex items-center justify-center">
-                          <Wallet class="w-5 h-5 text-pink-200" />
+              <div class="flex-1 min-h-0">
+                {/* Scrollable container with fixed height */}
+                <div class="h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 pr-2">
+                  <div class="space-y-3">
+                    <For each={splitBills()}>
+                      {(bill) => (
+                        <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 group">
+                          <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-pink-200/10 rounded-xl flex items-center justify-center group-hover:bg-pink-200/20 transition-all duration-300">
+                              <Wallet class="w-5 h-5 text-pink-200" />
+                            </div>
+                            <div>
+                              <p class="font-medium text-white group-hover:text-pink-100 transition-colors duration-300">{bill.description}</p>
+                              <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
+                            </div>
+                          </div>
+                          <div class="text-right">
+                            <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
+                            <p class="text-xs text-gray-500">Per person: Rp {Math.round(bill.total / bill.participants).toLocaleString()}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p class="font-medium text-white">{bill.description}</p>
-                          <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
-                        </div>
-                      </div>
-                      <div class="text-right">
-                        <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  )}
-                </For>
+                      )}
+                    </For>
+                  </div>
+                </div>
+                
+                {/* Show more indicator */}
+                {splitBills().length > 4 && (
+                  <div class="mt-4 pt-4 border-t border-gray-700/50">
+                    <p class="text-center text-gray-400 text-sm">
+                      Scroll to see more activities
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
-              <div class="text-center py-12">
-                <CalendarDays class="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <p class="text-gray-400 text-lg mb-2">No recent activities</p>
-                <p class="text-gray-500 text-sm mb-4">Start by adding your first split bill</p>
+              <div class="flex-1 flex items-center justify-center">
+                <div class="text-center py-12">
+                  <CalendarDays class="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                  <p class="text-gray-400 text-lg mb-2">No recent activities</p>
+                  <p class="text-gray-500 text-sm mb-4">Start by adding your first split bill</p>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Friends List */}
-          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300">
-            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Users class="w-5 h-5 text-pink-200" />
-              Friends Status
-            </h2>
+          {/* Friends List with Scrollable Content */}
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 flex flex-col">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <Users class="w-5 h-5 text-pink-200" />
+                Friends Status
+              </h2>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-400">
+                  {friends().length} friends
+                </span>
+                <span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full">
+                  {pendingPayments()} pending
+                </span>
+              </div>
+            </div>
+            
             {friends().length > 0 ? (
-              <div class="space-y-4">
-                <For each={friends()}>
-                  {(friend) => (
-                    <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
-                      <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center">
-                          <span class="text-gray-800 font-bold text-sm">{friend.avatar}</span>
+              <div class="flex-1 min-h-0">
+                {/* Scrollable container with fixed height */}
+                <div class="h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 pr-2">
+                  <div class="space-y-3">
+                    <For each={friends()}>
+                      {(friend) => (
+                        <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 group">
+                          <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <span class="text-gray-800 font-bold text-sm">{friend.avatar}</span>
+                            </div>
+                            <div>
+                              <p class="font-medium text-white group-hover:text-pink-100 transition-colors duration-300">{friend.name}</p>
+                              <p class="text-sm text-gray-400">Rp {friend.amount.toLocaleString()}</p>
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span class={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-300 ${
+                              friend.status === "Paid" 
+                                ? "bg-green-500/20 text-green-400 border-green-500/30 group-hover:bg-green-500/30"
+                                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 group-hover:bg-yellow-500/30"
+                            }`}>
+                              {friend.status}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <p class="font-medium text-white">{friend.name}</p>
-                          <p class="text-sm text-gray-400">Rp {friend.amount.toLocaleString()}</p>
-                        </div>
-                      </div>
-                      <span class={`px-3 py-1 rounded-full text-xs font-medium ${
-                        friend.status === "Paid" 
-                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                          : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                      }`}>
-                        {friend.status}
-                      </span>
-                    </div>
-                  )}
-                </For>
+                      )}
+                    </For>
+                  </div>
+                </div>
+                
+                {/* Show more indicator */}
+                {friends().length > 4 && (
+                  <div class="mt-4 pt-4 border-t border-gray-700/50">
+                    <p class="text-center text-gray-400 text-sm">
+                      Scroll to see more friends
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
-              <div class="text-center py-12">
-                <Users class="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <p class="text-gray-400 text-lg mb-2">No friends added yet</p>
-                <p class="text-gray-500 text-sm mb-4">Add friends to start splitting bills together</p>
+              <div class="flex-1 flex items-center justify-center">
+                <div class="text-center py-12">
+                  <Users class="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                  <p class="text-gray-400 text-lg mb-2">No friends added yet</p>
+                  <p class="text-gray-500 text-sm mb-4">Add friends to start splitting bills together</p>
+                </div>
               </div>
             )}
           </div>
