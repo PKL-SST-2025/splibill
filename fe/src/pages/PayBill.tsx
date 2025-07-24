@@ -16,12 +16,19 @@ export default function PayBillPage() {
     { id: 2, title: "Trip to Bandung", amount: 300000, status: "Unpaid", group: "Lina, Bagus", date: "2025-07-11", dueDate: "2025-07-20", icon: Heart },
     { id: 3, title: "Coffee Meeting Split", amount: 45000, status: "Unpaid", group: "Dina, Sari", date: "2025-07-10", dueDate: "2025-07-14", icon: CreditCard },
     { id: 4, title: "Lunch with Team", amount: 85000, status: "Unpaid", group: "Budi, Andi", date: "2025-07-09", dueDate: "2025-07-16", icon: DollarSign },
+    { id: 5, title: "Shopping Mall Trip", amount: 250000, status: "Unpaid", group: "Sari, Lina", date: "2025-07-08", dueDate: "2025-07-18", icon: Heart },
+    { id: 6, title: "Movie Night", amount: 90000, status: "Unpaid", group: "Rio, Maya", date: "2025-07-07", dueDate: "2025-07-17", icon: DollarSign },
+    { id: 7, title: "Gym Membership", amount: 150000, status: "Unpaid", group: "Andi, Budi", date: "2025-07-06", dueDate: "2025-07-19", icon: CreditCard },
   ]);
 
   // Sample data for recent payments
   const [recentPayments] = createSignal([
     { id: 1, title: "Movie Night Split", amount: 75000, status: "Paid", group: "Lisa, Rio", date: "2025-07-08", icon: CheckCircle },
     { id: 2, title: "Karaoke Session", amount: 120000, status: "Paid", group: "Maya, Dani", date: "2025-07-07", icon: CheckCircle },
+    { id: 3, title: "Restaurant Bill", amount: 180000, status: "Paid", group: "Sinta, Rina", date: "2025-07-06", icon: CheckCircle },
+    { id: 4, title: "Concert Tickets", amount: 350000, status: "Paid", group: "Bagus, Lina", date: "2025-07-05", icon: CheckCircle },
+    { id: 5, title: "Weekend Trip", amount: 500000, status: "Paid", group: "Dina, Sari", date: "2025-07-04", icon: CheckCircle },
+    { id: 6, title: "Birthday Party", amount: 200000, status: "Paid", group: "Rio, Maya", date: "2025-07-03", icon: CheckCircle },
   ]);
 
   onMount(() => {
@@ -387,83 +394,97 @@ export default function PayBillPage() {
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Bills to Pay */}
-          <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 800ms">
+          {/* Bills to Pay - With Scrollable Content */}
+          <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 flex flex-col ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 800ms">
             <div class="flex items-center gap-3 mb-6">
               <div class="p-2 bg-red-500/20 rounded-xl">
                 <AlertCircle class="w-5 h-5 text-red-400" />
               </div>
               <h2 class="text-xl font-bold text-white">Bills to Pay</h2>
+              <div class="ml-auto bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm font-medium">
+                {billsToPay().length} pending
+              </div>
             </div>
-            <div class="space-y-4">
-              <For each={billsToPay()}>
-                {(bill) => (
-                  <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-                    <div class="flex items-center justify-between mb-3">
-                      <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
-                          <bill.icon class="w-5 h-5 text-red-400" />
-                        </div>
-                        <div>
-                          <p class="font-semibold text-white">{bill.title}</p>
-                          <p class="text-gray-400 text-sm">Group: {bill.group}</p>
-                          <div class="flex items-center gap-2 text-gray-400 text-sm">
-                            <Calendar class="w-4 h-4" />
-                            <span>Due: {bill.dueDate}</span>
+            
+            {/* Scrollable container */}
+            <div class="flex-1 overflow-hidden">
+              <div class="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50">
+                <For each={billsToPay()}>
+                  {(bill) => (
+                    <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
+                            <bill.icon class="w-5 h-5 text-red-400" />
+                          </div>
+                          <div>
+                            <p class="font-semibold text-white">{bill.title}</p>
+                            <p class="text-gray-400 text-sm">Group: {bill.group}</p>
+                            <div class="flex items-center gap-2 text-gray-400 text-sm">
+                              <Calendar class="w-4 h-4" />
+                              <span>Due: {bill.dueDate}</span>
+                            </div>
                           </div>
                         </div>
+                        <div class="text-right">
+                          <p class="text-red-300 font-bold">Rp {bill.amount.toLocaleString()}</p>
+                          <p class="text-red-400 text-sm">{bill.status}</p>
+                        </div>
                       </div>
-                      <div class="text-right">
-                        <p class="text-red-300 font-bold">Rp {bill.amount.toLocaleString()}</p>
-                        <p class="text-red-400 text-sm">{bill.status}</p>
-                      </div>
+                      <button
+                        class="w-full bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-4 py-2 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
+                        onClick={() => handlePay(bill.id)}
+                      >
+                        Pay Now
+                      </button>
                     </div>
-                    <button
-                      class="w-full bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-4 py-2 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
-                      onClick={() => handlePay(bill.id)}
-                    >
-                      Pay Now
-                    </button>
-                  </div>
-                )}
-              </For>
+                  )}
+                </For>
+              </div>
             </div>
           </div>
 
-          {/* Recent Payments */}
-          <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
+          {/* Recent Payments - With Scrollable Content */}
+          <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 flex flex-col ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
             <div class="flex items-center gap-3 mb-6">
               <div class="p-2 bg-emerald-500/20 rounded-xl">
                 <CheckCircle class="w-5 h-5 text-emerald-400" />
               </div>
               <h2 class="text-xl font-bold text-white">Recent Payments</h2>
+              <div class="ml-auto bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium">
+                {recentPayments().length} completed
+              </div>
             </div>
-            <div class="space-y-4">
-              <For each={recentPayments()}>
-                {(payment) => (
-                  <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-                    <div class="flex items-center justify-between mb-2">
-                      <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                          <payment.icon class="w-5 h-5 text-emerald-400" />
-                        </div>
-                        <div>
-                          <p class="font-semibold text-white">{payment.title}</p>
-                          <p class="text-gray-400 text-sm">Group: {payment.group}</p>
-                          <div class="flex items-center gap-2 text-gray-400 text-sm">
-                            <Calendar class="w-4 h-4" />
-                            <span>Paid: {payment.date}</span>
+            
+            {/* Scrollable container */}
+            <div class="flex-1 overflow-hidden">
+              <div class="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50">
+                <For each={recentPayments()}>
+                  {(payment) => (
+                    <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                            <payment.icon class="w-5 h-5 text-emerald-400" />
+                          </div>
+                          <div>
+                            <p class="font-semibold text-white">{payment.title}</p>
+                            <p class="text-gray-400 text-sm">Group: {payment.group}</p>
+                            <div class="flex items-center gap-2 text-gray-400 text-sm">
+                              <Calendar class="w-4 h-4" />
+                              <span>Paid: {payment.date}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div class="text-right">
-                        <p class="text-emerald-300 font-bold">Rp {payment.amount.toLocaleString()}</p>
-                        <p class="text-emerald-400 text-sm">{payment.status}</p>
+                        <div class="text-right">
+                          <p class="text-emerald-300 font-bold">Rp {payment.amount.toLocaleString()}</p>
+                          <p class="text-emerald-400 text-sm">{payment.status}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </For>
+                  )}
+                </For>
+              </div>
             </div>
           </div>
         </div>
