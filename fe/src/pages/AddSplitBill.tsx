@@ -14,12 +14,7 @@ export default function AddSplitBillPage() {
   const [billDate, setBillDate] = createSignal(new Date().toISOString().split('T')[0]);
   const [billCategory, setBillCategory] = createSignal("food");
   const [billDescription, setBillDescription] = createSignal("");
-  const [friends, setFriends] = createSignal([
-    { id: 1, name: "Budi", amount: 0, selected: false },
-    { id: 2, name: "Sari", amount: 0, selected: false },
-    { id: 3, name: "Dina", amount: 0, selected: false },
-    { id: 4, name: "Andi", amount: 0, selected: false },
-  ]);
+  const [friends, setFriends] = createSignal<Friend[]>([]); // Empty array with proper typing
   const [newFriendName, setNewFriendName] = createSignal("");
   const [splitType, setSplitType] = createSignal("equal"); // equal or custom
 
@@ -67,17 +62,23 @@ const handleLogout = () => {
   }
 };
 
+  // Define Friend interface
+  interface Friend {
+    id: number;
+    name: string;
+    amount: number;
+    selected: boolean;
+  }
+
   const toggleFriend = (id: number) => {
-    setFriends(friends().map(friend => 
+    setFriends(friends().map((friend: Friend) => 
       friend.id === id ? { ...friend, selected: !friend.selected } : friend
     ));
   };
 
-  
-
   const addFriend = () => {
     if (newFriendName().trim()) {
-      const newId = Math.max(...friends().map(f => f.id), 0) + 1;
+      const newId = friends().length > 0 ? Math.max(...friends().map((f: Friend) => f.id)) + 1 : 1;
       setFriends([...friends(), { 
         id: newId, 
         name: newFriendName().trim(), 
@@ -89,16 +90,16 @@ const handleLogout = () => {
   };
 
   const removeFriend = (id: number) => {
-    setFriends(friends().filter(friend => friend.id !== id));
+    setFriends(friends().filter((friend: Friend) => friend.id !== id));
   };
 
   const updateFriendAmount = (id: number, amount: string) => {
-    setFriends(friends().map(friend => 
+    setFriends(friends().map((friend: Friend) => 
       friend.id === id ? { ...friend, amount: parseFloat(amount) || 0 } : friend
     ));
   };
 
-  const selectedFriends = () => friends().filter(f => f.selected);
+  const selectedFriends = () => friends().filter((f: Friend) => f.selected);
   const totalAmount = () => parseFloat(billAmount()) || 0;
   const splitAmount = () => {
     const selected = selectedFriends();
@@ -110,7 +111,7 @@ const handleLogout = () => {
   };
 
   const customTotal = () => {
-    return selectedFriends().reduce((sum, friend) => sum + friend.amount, 0);
+    return selectedFriends().reduce((sum: number, friend: Friend) => sum + friend.amount, 0);
   };
 
   const handleSubmit = () => {
@@ -452,7 +453,7 @@ const handleLogout = () => {
                     <input
                       type="number"
                       value={billAmount()}
-                      onInput={(e) => setBillAmount(e.target.value)}
+                      onInput={(e) => setBillAmount((e.target as HTMLInputElement).value)}
                       placeholder="0"
                       class="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-200/50 focus:ring-2 focus:ring-pink-200/20 transition-all duration-300"
                     />
@@ -463,7 +464,7 @@ const handleLogout = () => {
                   <input
                     type="date"
                     value={billDate()}
-                    onInput={(e) => setBillDate(e.target.value)}
+                    onInput={(e) => setBillDate((e.target as HTMLInputElement).value)}
                     class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white focus:outline-none focus:border-pink-200/50 focus:ring-2 focus:ring-pink-200/20 transition-all duration-300"
                   />
                 </div>
@@ -474,7 +475,7 @@ const handleLogout = () => {
                 <label class="block text-sm font-medium text-gray-300 mb-2">Category</label>
                 <select
                   value={billCategory()}
-                  onChange={(e) => setBillCategory(e.target.value)}
+                  onChange={(e) => setBillCategory((e.target as HTMLSelectElement).value)}
                   class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white focus:outline-none focus:border-pink-200/50 focus:ring-2 focus:ring-pink-200/20 transition-all duration-300"
                 >
                   <For each={categories}>
@@ -490,7 +491,7 @@ const handleLogout = () => {
                 <label class="block text-sm font-medium text-gray-300 mb-2">Description (Optional)</label>
                 <textarea
                   value={billDescription()}
-                  onInput={(e) => setBillDescription(e.target.value)}
+                  onInput={(e) => setBillDescription((e.target as HTMLTextAreaElement).value)}
                   placeholder="Add any additional details..."
                   rows={3}
                   class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-200/50 focus:ring-2 focus:ring-pink-200/20 transition-all duration-300 resize-none"
@@ -507,7 +508,7 @@ const handleLogout = () => {
                       name="splitType"
                       value="equal"
                       checked={splitType() === "equal"}
-                      onChange={(e) => setSplitType(e.target.value)}
+                      onChange={(e) => setSplitType((e.target as HTMLInputElement).value)}
                       class="w-4 h-4 text-pink-200 bg-gray-800/50 border-gray-700/50 focus:ring-pink-200/20"
                     />
                     <span class="text-gray-300">Split Equally</span>
@@ -518,7 +519,7 @@ const handleLogout = () => {
                       name="splitType"
                       value="custom"
                       checked={splitType() === "custom"}
-                      onChange={(e) => setSplitType(e.target.value)}
+                      onChange={(e) => setSplitType((e.target as HTMLInputElement).value)}
                       class="w-4 h-4 text-pink-200 bg-gray-800/50 border-gray-700/50 focus:ring-pink-200/20"
                     />
                     <span class="text-gray-300">Custom Amounts</span>
@@ -543,7 +544,7 @@ const handleLogout = () => {
                 <input
                   type="text"
                   value={newFriendName()}
-                  onInput={(e) => setNewFriendName(e.target.value)}
+                  onInput={(e) => setNewFriendName((e.target as HTMLInputElement).value)}
                   placeholder="Friend's name"
                   class="flex-1 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-pink-200/50 focus:ring-1 focus:ring-pink-200/20 transition-all duration-300"
                   onKeyDown={(e) => e.key === 'Enter' && addFriend()}
@@ -559,59 +560,69 @@ const handleLogout = () => {
 
             {/* Friends List */}
             <div class="space-y-3">
-              <For each={friends()}>
-                {(friend) => (
-                  <div class={`p-4 rounded-xl border transition-all duration-300 ${
-                    friend.selected 
-                      ? 'bg-emerald-500/10 border-emerald-500/30' 
-                      : 'bg-gray-800/40 border-gray-700/30 hover:bg-gray-800/60'
-                  }`}>
-                    <div class="flex items-center justify-between mb-2">
-                      <label class="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={friend.selected}
-                          onChange={() => toggleFriend(friend.id)}
-                          class="w-4 h-4 text-emerald-400 bg-gray-800/50 border-gray-700/50 rounded focus:ring-emerald-400/20"
-                        />
-                        <div class="flex items-center gap-2">
-                          <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center">
-                            <span class="text-white font-bold text-sm">{friend.name[0]}</span>
-                          </div>
-                          <span class="text-white font-medium">{friend.name}</span>
-                        </div>
-                      </label>
-                      <button
-                        onClick={() => removeFriend(friend.id)}
-                        class="p-1 text-gray-400 hover:text-red-400 transition-colors duration-200"
-                      >
-                        <Minus class="w-4 h-4" />
-                      </button>
-                    </div>
-                    
-                    {friend.selected && (
-                      <div class="mt-3">
-                        {splitType() === "equal" ? (
-                          <div class="text-emerald-400 font-medium">
-                            Rp {splitAmount().toLocaleString()}
-                          </div>
-                        ) : (
-                          <div class="relative">
-                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">Rp</span>
-                            <input
-                              type="number"
-                              value={friend.amount || ""}
-                              onInput={(e) => updateFriendAmount(friend.id, e.target.value)}
-                              placeholder="0"
-                              class="w-full pl-10 pr-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400/50 focus:ring-1 focus:ring-emerald-400/20 transition-all duration-300"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
+              {friends().length === 0 ? (
+                <div class="text-center py-8">
+                  <div class="w-16 h-16 bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users class="w-8 h-8 text-gray-500" />
                   </div>
-                )}
-              </For>
+                  <p class="text-gray-400 mb-2">No friends added yet</p>
+                  <p class="text-gray-500 text-sm">Add friends above to split the bill with them</p>
+                </div>
+              ) : (
+                <For each={friends()}>
+                  {(friend: Friend) => (
+                    <div class={`p-4 rounded-xl border transition-all duration-300 ${
+                      friend.selected 
+                        ? 'bg-emerald-500/10 border-emerald-500/30' 
+                        : 'bg-gray-800/40 border-gray-700/30 hover:bg-gray-800/60'
+                    }`}>
+                      <div class="flex items-center justify-between mb-2">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={friend.selected}
+                            onChange={() => toggleFriend(friend.id)}
+                            class="w-4 h-4 text-emerald-400 bg-gray-800/50 border-gray-700/50 rounded focus:ring-emerald-400/20"
+                          />
+                          <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center">
+                              <span class="text-white font-bold text-sm">{friend.name[0]}</span>
+                            </div>
+                            <span class="text-white font-medium">{friend.name}</span>
+                          </div>
+                        </label>
+                        <button
+                          onClick={() => removeFriend(friend.id)}
+                          class="p-1 text-gray-400 hover:text-red-400 transition-colors duration-200"
+                        >
+                          <Minus class="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      {friend.selected && (
+                        <div class="mt-3">
+                          {splitType() === "equal" ? (
+                            <div class="text-emerald-400 font-medium">
+                              Rp {splitAmount().toLocaleString()}
+                            </div>
+                          ) : (
+                            <div class="relative">
+                              <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">Rp</span>
+                              <input
+                                type="number"
+                                value={friend.amount || ""}
+                                onInput={(e) => updateFriendAmount(friend.id, (e.target as HTMLInputElement).value)}
+                                placeholder="0"
+                                class="w-full pl-10 pr-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400/50 focus:ring-1 focus:ring-emerald-400/20 transition-all duration-300"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </For>
+              )}
             </div>
           </div>
         </div>
@@ -677,7 +688,8 @@ const handleLogout = () => {
               <h4 class="text-lg font-semibold text-white mb-2">How it works</h4>
               <div class="space-y-2 text-gray-300">
                 <p>• Enter the bill details including title, amount, and category</p>
-                <p>• Select friends you want to split the bill with</p>
+                <p>• Add friends you want to split the bill with</p>
+                <p>• Select which friends to include in the split</p>
                 <p>• Choose between equal split or custom amounts</p>
                 <p>• Review the summary and create your split bill</p>
                 <p>• Friends will be notified and can settle their share</p>
