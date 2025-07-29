@@ -28,162 +28,38 @@ export default function Dashboard() {
   }>>([]);
   const [isSearching, setIsSearching] = createSignal(false);
   
-  // Notification functionality
+  // Notification functionality - empty by default
   const [isNotificationOpen, setIsNotificationOpen] = createSignal(false);
-  const [notifications, setNotifications] = createSignal([
-    {
-      id: 1,
-      type: "payment",
-      title: "Payment Received",
-      message: "John Doe paid Rp 150,000 for dinner split",
-      time: "2 minutes ago",
-      read: false,
-      icon: "check"
-    },
-    {
-      id: 2,
-      type: "reminder",
-      title: "Payment Reminder",
-      message: "You owe Sarah Rp 75,000 for grocery shopping",
-      time: "1 hour ago",
-      read: false,
-      icon: "alert"
-    },
-    {
-      id: 3,
-      type: "info",
-      title: "New Friend Request",
-      message: "Mike Johnson wants to be your friend",
-      time: "3 hours ago",
-      read: true,
-      icon: "user"
-    },
-    {
-      id: 4,
-      type: "bill",
-      title: "New Bill Added",
-      message: "Movie night bill created - Rp 200,000",
-      time: "5 hours ago",
-      read: true,
-      icon: "bill"
-    }
-  ]);
   
-  // Extended sample data for demonstration of scrolling
-  const [splitBills, setSplitBills] = createSignal([
-    {
-      date: "2025-07-24",
-      total: 150000,
-      description: "Dinner at Italian Restaurant",
-      participants: 4
-    },
-    {
-      date: "2025-07-23",
-      total: 75000,
-      description: "Grocery Shopping",
-      participants: 2
-    },
-    {
-      date: "2025-07-22",
-      total: 200000,
-      description: "Movie Night",
-      participants: 5
-    },
-    {
-      date: "2025-07-21",
-      total: 120000,
-      description: "Coffee Shop Meet-up",
-      participants: 3
-    },
-    {
-      date: "2025-07-20",
-      total: 300000,
-      description: "Birthday Party Expenses",
-      participants: 8
-    },
-    {
-      date: "2025-07-19",
-      total: 85000,
-      description: "Lunch at Sushi Place",
-      participants: 4
-    },
-    {
-      date: "2025-07-18",
-      total: 180000,
-      description: "Weekend Trip Gas & Tolls",
-      participants: 6
-    },
-    {
-      date: "2025-07-17",
-      total: 95000,
-      description: "Karaoke Night",
-      participants: 5
-    }
-  ]);
-  
-  // Extended friends list for demonstration of scrolling
-  const [friends, setFriends] = createSignal([
-    {
-      name: "John Doe",
-      status: "Paid",
-      avatar: "JD",
-      amount: 37500
-    },
-    {
-      name: "Sarah Wilson",
-      status: "Waiting",
-      avatar: "SW",
-      amount: 75000
-    },
-    {
-      name: "Mike Johnson",
-      status: "Paid",  
-      avatar: "MJ",
-      amount: 40000
-    },
-    {
-      name: "Emma Davis",
-      status: "Waiting",
-      avatar: "ED",
-      amount: 62500
-    },
-    {
-      name: "Alex Chen",
-      status: "Paid",
-      avatar: "AC",
-      amount: 45000
-    },
-    {
-      name: "Lisa Brown",
-      status: "Waiting",
-      avatar: "LB",
-      amount: 80000
-    },
-    {
-      name: "David Miller",
-      status: "Paid",
-      avatar: "DM",
-      amount: 55000
-    },
-    {
-      name: "Jessica Taylor",
-      status: "Waiting",
-      avatar: "JT",
-      amount: 90000
-    },
-    {
-      name: "Ryan Garcia",
-      status: "Paid",
-      avatar: "RG",
-      amount: 35000
-    },
-    {
-      name: "Sophie Lee",
-      status: "Waiting",
-      avatar: "SL",
-      amount: 70000
-    }
-  ]);
+  // Define types for better TypeScript support
+  interface SplitBill {
+    date: string;
+    total: number;
+    description: string;
+    participants: number;
+  }
+
+  interface Friend {
+    name: string;
+    status: "Paid" | "Waiting";
+    avatar: string;
+    amount: number;
+  }
+
+  interface Notification {
+    id: number;
+    type: string;
+    title: string;
+    message: string;
+    time: string;
+    read: boolean;
+    icon: string;
+  }
+
+  // Empty data states - will be populated when user adds data
+  const [splitBills, setSplitBills] = createSignal<SplitBill[]>([]);
+  const [friends, setFriends] = createSignal<Friend[]>([]);
+  const [notifications, setNotifications] = createSignal<Notification[]>([]);
 
   // Search data combining bills and friends
   const searchData = (): Array<{
@@ -194,19 +70,19 @@ export default function Dashboard() {
     status?: string;
     id: string;
   }> => [
-    ...splitBills().map(bill => ({
+    ...splitBills().map((bill, index) => ({
       type: 'bill',
       title: bill.description,
       subtitle: `Rp ${bill.total.toLocaleString()} • ${bill.participants} people`,
       date: bill.date,
-      id: `bill-${bill.date}`
+      id: `bill-${bill.date}-${index}`
     })),
-    ...friends().map(friend => ({
+    ...friends().map((friend, index) => ({
       type: 'friend',
       title: friend.name,
       subtitle: `${friend.status} • Rp ${friend.amount.toLocaleString()}`,
       status: friend.status,
-      id: `friend-${friend.name}`
+      id: `friend-${friend.name}-${index}`
     }))
   ];
 
@@ -246,11 +122,11 @@ export default function Dashboard() {
   });
 
   // Notification functions
-  const unreadCount = () => notifications().filter(n => !n.read).length;
+  const unreadCount = () => notifications().filter((n: Notification) => !n.read).length;
   
   const markNotificationAsRead = (id: number) => {
-    setNotifications(prev => 
-      prev.map(notification => 
+    setNotifications((prev: Notification[]) => 
+      prev.map((notification: Notification) => 
         notification.id === id 
           ? { ...notification, read: true }
           : notification
@@ -259,8 +135,8 @@ export default function Dashboard() {
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
+    setNotifications((prev: Notification[]) => 
+      prev.map((notification: Notification) => ({ ...notification, read: true }))
     );
   };
 
@@ -308,6 +184,7 @@ export default function Dashboard() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
+    // Initialize empty chart
     const chart = am4core.create("chartdiv", am4charts.XYChart);
     chart.paddingRight = 20;
     chart.paddingLeft = 20;
@@ -318,10 +195,8 @@ export default function Dashboard() {
     chart.background.fill = am4core.color("#1f2937");
     chart.plotContainer.background.fill = am4core.color("#1f2937");
 
-    chart.data = splitBills().map((bill) => ({
-      date: new Date(bill.date),
-      value: bill.total,
-    }));
+    // Empty data initially
+    chart.data = [];
 
     const dateAxis = chart.xAxes.push(new am4charts.DateAxis());
     dateAxis.renderer.grid.template.stroke = am4core.color("#374151");
@@ -348,7 +223,7 @@ export default function Dashboard() {
     // Update chart when splitBills changes
     createEffect(() => {
       if (chart && splitBills().length > 0) {
-        chart.data = splitBills().map((bill) => ({
+        chart.data = splitBills().map((bill: SplitBill) => ({
           date: new Date(bill.date),
           value: bill.total,
         }));
@@ -376,9 +251,9 @@ export default function Dashboard() {
     }
   };
 
-  const totalExpenses = () => splitBills().reduce((sum, bill) => sum + bill.total, 0);
-  const pendingPayments = () => friends().filter(f => f.status === "Waiting").length;
-  const todayBills = () => splitBills().filter(b => b.date === selectedDate().toISOString().split("T")[0]);
+  const totalExpenses = () => splitBills().reduce((sum: number, bill: SplitBill) => sum + bill.total, 0);
+  const pendingPayments = () => friends().filter((f: Friend) => f.status === "Waiting").length;
+  const todayBills = () => splitBills().filter((b: SplitBill) => b.date === selectedDate().toISOString().split("T")[0]);
 
   return (
     <div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex relative overflow-hidden">
@@ -770,7 +645,7 @@ export default function Dashboard() {
                     ) : (
                       <div class="p-2">
                         <For each={notifications()}>
-                          {(notification) => {
+                          {(notification: Notification) => {
                             const IconComponent = getNotificationIcon(notification.icon);
                             return (
                               <div 
@@ -883,9 +758,9 @@ export default function Dashboard() {
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activities with Scrollable Content */}
-          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 flex flex-col">
-            <div class="flex items-center justify-between mb-6">
+          {/* Recent Activities with Enhanced Scrolling */}
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b border-gray-700/50 bg-gray-900/40">
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
                 <CalendarDays class="w-5 h-5 text-pink-200" />
                 Recent Activities
@@ -896,55 +771,51 @@ export default function Dashboard() {
             </div>
             
             {splitBills().length > 0 ? (
-              <div class="flex-1 min-h-0">
-                {/* Scrollable container with fixed height */}
-                <div class="h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 pr-2">
-                  <div class="space-y-3">
-                    <For each={splitBills()}>
-                      {(bill) => (
-                        <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 group">
-                          <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-pink-200/10 rounded-xl flex items-center justify-center group-hover:bg-pink-200/20 transition-all duration-300">
-                              <Wallet class="w-5 h-5 text-pink-200" />
+              <div class="flex-1 relative">
+                {/* Custom scrollable area with seamless design */}
+                <div class="h-96 overflow-hidden relative">
+                  <div class="h-full overflow-y-auto scrollbar-none hover:scrollbar-thin scrollbar-thumb-pink-200/30 scrollbar-track-transparent px-6 py-4">
+                    <div class="space-y-3">
+                      <For each={splitBills()}>
+                        {(bill: SplitBill) => (
+                          <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-800/20 to-gray-800/40 rounded-xl border border-gray-700/20 hover:from-gray-800/40 hover:to-gray-800/60 hover:border-pink-200/20 transition-all duration-300 group backdrop-blur-sm">
+                            <div class="flex items-center gap-3">
+                              <div class="w-10 h-10 bg-gradient-to-br from-pink-200/10 to-pink-200/20 rounded-xl flex items-center justify-center group-hover:from-pink-200/20 group-hover:to-pink-200/30 transition-all duration-300">
+                                <Wallet class="w-5 h-5 text-pink-200" />
+                              </div>
+                              <div>
+                                <p class="font-medium text-white group-hover:text-pink-100 transition-colors duration-300">{bill.description}</p>
+                                <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
+                              </div>
                             </div>
-                            <div>
-                              <p class="font-medium text-white group-hover:text-pink-100 transition-colors duration-300">{bill.description}</p>
-                              <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
+                            <div class="text-right">
+                              <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
+                              <p class="text-xs text-gray-500">Per person: Rp {Math.round(bill.total / bill.participants).toLocaleString()}</p>
                             </div>
                           </div>
-                          <div class="text-right">
-                            <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
-                            <p class="text-xs text-gray-500">Per person: Rp {Math.round(bill.total / bill.participants).toLocaleString()}</p>
-                          </div>
-                        </div>
-                      )}
-                    </For>
+                        )}
+                      </For>
+                    </div>
                   </div>
+                  
+                  {/* Gradient fade at bottom for scroll indication */}
+                  <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-900/60 to-transparent pointer-events-none" />
                 </div>
-                
-                {/* Show more indicator */}
-                {splitBills().length > 4 && (
-                  <div class="mt-4 pt-4 border-t border-gray-700/50">
-                    <p class="text-center text-gray-400 text-sm">
-                      Scroll to see more activities
-                    </p>
-                  </div>
-                )}
               </div>
             ) : (
-              <div class="flex-1 flex items-center justify-center">
+              <div class="flex-1 flex items-center justify-center p-6">
                 <div class="text-center py-12">
                   <CalendarDays class="w-12 h-12 text-gray-500 mx-auto mb-4" />
                   <p class="text-gray-400 text-lg mb-2">No recent activities</p>
-                  <p class="text-gray-500 text-sm mb-4">Start by adding your first split bill</p>
+                  <p class="text-gray-500 text-sm">Start by adding your first split bill</p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Friends List with Scrollable Content */}
-          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 flex flex-col">
-            <div class="flex items-center justify-between mb-6">
+          {/* Friends List with Enhanced Scrolling */}
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b border-gray-700/50 bg-gray-900/40">
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
                 <Users class="w-5 h-5 text-pink-200" />
                 Friends Status
@@ -953,59 +824,57 @@ export default function Dashboard() {
                 <span class="text-sm text-gray-400">
                   {friends().length} friends
                 </span>
-                <span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full">
-                  {pendingPayments()} pending
-                </span>
+                {pendingPayments() > 0 && (
+                  <span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full">
+                    {pendingPayments()} pending
+                  </span>
+                )}
               </div>
             </div>
             
             {friends().length > 0 ? (
-              <div class="flex-1 min-h-0">
-                {/* Scrollable container with fixed height */}
-                <div class="h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 pr-2">
-                  <div class="space-y-3">
-                    <For each={friends()}>
-                      {(friend) => (
-                        <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 group">
-                          <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                              <span class="text-gray-800 font-bold text-sm">{friend.avatar}</span>
+              <div class="flex-1 relative">
+                {/* Custom scrollable area with seamless design */}
+                <div class="h-96 overflow-hidden relative">
+                  <div class="h-full overflow-y-auto scrollbar-none hover:scrollbar-thin scrollbar-thumb-pink-200/30 scrollbar-track-transparent px-6 py-4">
+                    <div class="space-y-3">
+                      <For each={friends()}>
+                        {(friend: Friend) => (
+                          <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-800/20 to-gray-800/40 rounded-xl border border-gray-700/20 hover:from-gray-800/40 hover:to-gray-800/60 hover:border-pink-200/20 transition-all duration-300 group backdrop-blur-sm">
+                            <div class="flex items-center gap-3">
+                              <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                                <span class="text-gray-800 font-bold text-sm">{friend.avatar}</span>
+                              </div>
+                              <div>
+                                <p class="font-medium text-white group-hover:text-pink-100 transition-colors duration-300">{friend.name}</p>
+                                <p class="text-sm text-gray-400">Rp {friend.amount.toLocaleString()}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p class="font-medium text-white group-hover:text-pink-100 transition-colors duration-300">{friend.name}</p>
-                              <p class="text-sm text-gray-400">Rp {friend.amount.toLocaleString()}</p>
+                            <div class="flex items-center gap-2">
+                              <span class={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-300 ${
+                                friend.status === "Paid" 
+                                  ? "bg-green-500/20 text-green-400 border-green-500/30 group-hover:bg-green-500/30"
+                                  : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 group-hover:bg-yellow-500/30"
+                              }`}>
+                                {friend.status}
+                              </span>
                             </div>
                           </div>
-                          <div class="flex items-center gap-2">
-                            <span class={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-300 ${
-                              friend.status === "Paid" 
-                                ? "bg-green-500/20 text-green-400 border-green-500/30 group-hover:bg-green-500/30"
-                                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 group-hover:bg-yellow-500/30"
-                            }`}>
-                              {friend.status}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </For>
+                        )}
+                      </For>
+                    </div>
                   </div>
+                  
+                  {/* Gradient fade at bottom for scroll indication */}
+                  <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-900/60 to-transparent pointer-events-none" />
                 </div>
-                
-                {/* Show more indicator */}
-                {friends().length > 4 && (
-                  <div class="mt-4 pt-4 border-t border-gray-700/50">
-                    <p class="text-center text-gray-400 text-sm">
-                      Scroll to see more friends
-                    </p>
-                  </div>
-                )}
               </div>
             ) : (
-              <div class="flex-1 flex items-center justify-center">
+              <div class="flex-1 flex items-center justify-center p-6">
                 <div class="text-center py-12">
                   <Users class="w-12 h-12 text-gray-500 mx-auto mb-4" />
                   <p class="text-gray-400 text-lg mb-2">No friends added yet</p>
-                  <p class="text-gray-500 text-sm mb-4">Add friends to start splitting bills together</p>
+                  <p class="text-gray-500 text-sm">Add friends to start splitting bills together</p>
                 </div>
               </div>
             )}
