@@ -14,7 +14,7 @@ export default function AddSplitBillPage() {
   const [billDate, setBillDate] = createSignal(new Date().toISOString().split('T')[0]);
   const [billCategory, setBillCategory] = createSignal("food");
   const [billDescription, setBillDescription] = createSignal("");
-  const [friends, setFriends] = createSignal<Friend[]>([]); // Empty array with proper typing
+  const [friends, setFriends] = createSignal<Friend[]>([]);
   const [newFriendName, setNewFriendName] = createSignal("");
   const [splitType, setSplitType] = createSignal("equal"); // equal or custom
 
@@ -50,17 +50,11 @@ export default function AddSplitBillPage() {
     setIsSidebarOpen(!isSidebarOpen());
   };
 
-const handleLogout = () => {
-  // Add logout logic here - clear auth tokens, redirect to login, etc.
-  if (confirm("Are you sure you want to log out?")) {
-    // Clear any stored authentication data
-    // localStorage.removeItem('auth_token'); // if using localStorage
-    // sessionStorage.clear(); // if using sessionStorage
-    
-    // Redirect to login page
-    navigate("/login");
-  }
-};
+  const handleLogout = () => {
+    if (confirm("Are you sure you want to log out?")) {
+      navigate("/login");
+    }
+  };
 
   // Define Friend interface
   interface Friend {
@@ -114,6 +108,35 @@ const handleLogout = () => {
     return selectedFriends().reduce((sum: number, friend: Friend) => sum + friend.amount, 0);
   };
 
+  // Helper function to create notification
+  const createNotification = (type: string, title: string, message: string, icon = 'info') => {
+    const notification = {
+      id: Date.now() + Math.random(),
+      type,
+      title,
+      message,
+      time: new Date().toLocaleString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        day: '2-digit',
+        month: 'short'
+      }),
+      read: false,
+      icon
+    };
+    
+    // Get existing notifications from localStorage
+    const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    
+    // Add new notification at the beginning
+    const updatedNotifications = [notification, ...existingNotifications];
+    
+    // Save to localStorage
+    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+    
+    return notification;
+  };
+
   const handleSubmit = () => {
     if (!billTitle() || !billAmount() || selectedFriends().length === 0) {
       alert("Please fill in all required fields and select at least one friend.");
@@ -125,19 +148,91 @@ const handleLogout = () => {
       return;
     }
 
-    // Here you would typically save the bill data
-    console.log({
-      title: billTitle(),
-      amount: totalAmount(),
+    // Create new split bill
+    const newBill = {
       date: billDate(),
+      total: totalAmount(),
+      description: billTitle(),
+      participants: selectedFriends().length + 1, // +1 for user
       category: billCategory(),
-      description: billDescription(),
-      friends: selectedFriends(),
-      splitType: splitType()
+      splitType: splitType(),
+      createdAt: new Date().toISOString()
+    };
+
+    // Save to localStorage - Split Bills
+    const existingBills = JSON.parse(localStorage.getItem('splitBills') || '[]');
+    const updatedBills = [newBill, ...existingBills];
+    localStorage.setItem('splitBills', JSON.stringify(updatedBills));
+
+    // Update or add friends with their bill amounts
+    const existingFriends = JSON.parse(localStorage.getItem('friends') || '[]');
+    let updatedFriends = [...existingFriends];
+
+    selectedFriends().forEach(selectedFriend => {
+      const existingFriendIndex = updatedFriends.findIndex(f => f.name === selectedFriend.name);
+      
+      const friendAmount = splitType() === 'equal' 
+        ? totalAmount() / (selectedFriends().length + 1)
+        : selectedFriend.amount;
+
+      if (existingFriendIndex >= 0) {
+        // Update existing friend
+        updatedFriends[existingFriendIndex] = {
+          ...updatedFriends[existingFriendIndex],
+          amount: updatedFriends[existingFriendIndex].amount + friendAmount,
+          status: "Waiting" // Reset status to waiting for new bill
+        };
+      } else {
+        // Add new friend
+        const newFriend = {
+          name: selectedFriend.name,
+          status: "Waiting",
+          avatar: selectedFriend.name[0].toUpperCase(),
+          amount: friendAmount
+        };
+        updatedFriends.push(newFriend);
+      }
+    });
+
+    // Save updated friends to localStorage
+    localStorage.setItem('friends', JSON.stringify(updatedFriends));
+
+    // Create notifications
+    // Main notification for new bill
+    createNotification(
+      'bill',
+      'New Split Bill Created',
+      `"${billTitle()}" for Rp ${totalAmount().toLocaleString()} has been created and shared with ${selectedFriends().length} friend(s).`,
+      'bill'
+    );
+
+    // Create notifications for each friend
+    selectedFriends().forEach(friend => {
+      const amount = splitType() === 'equal' 
+        ? totalAmount() / (selectedFriends().length + 1)
+        : friend.amount;
+      
+      createNotification(
+        'reminder',
+        `Bill Split with ${friend.name}`,
+        `${friend.name} owes Rp ${amount.toLocaleString()} for "${billTitle()}".`,
+        'user'
+      );
     });
 
     alert("Split bill created successfully!");
-    navigate("/finance");
+    
+    // Reset form
+    setBillTitle("");
+    setBillAmount("");
+    setBillDate(new Date().toISOString().split('T')[0]);
+    setBillCategory("food");
+    setBillDescription("");
+    setFriends([]);
+    setSplitType("equal");
+    
+    // Navigate to dashboard to see updated data
+    navigate("/dashboard");
   };
 
   return (
@@ -243,7 +338,7 @@ const handleLogout = () => {
             )}
           </div>
 
-           {/* Pay Bill */}
+          {/* Pay Bill */}
           <div class="relative group">
             <button 
               onClick={() => navigate("/paybill")} 
@@ -264,119 +359,114 @@ const handleLogout = () => {
             )}
           </div>
 
-           {/* Friends */}
-                  
-                    <div class="relative group">
-                      <button 
-                        onClick={() => navigate("/friends")} 
-                        class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-                          !isSidebarOpen() ? 'justify-center' : ''
-                        }`}
-                      >
-                        <Users class="w-5 h-5 flex-shrink-0" />
-                        <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                          isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-                        }`}>Friends</span>
-                      </button>
+          {/* Friends */}
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/friends")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <Users class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Friends</span>
+            </button>
             {!isSidebarOpen() && !isMobile() && (
               <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                 Friends
                 <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
               </div>
-              
             )}
           </div>
 
           {/* Add Friend */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/addfriend")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <UserPlus class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Add Friend</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Add Friend
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/account")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <User class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account Settings - Submenu */}
-<div class="relative group ml-4">
-  <button 
-    onClick={() => navigate("/accountsettings")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <Settings class="w-4 h-4 flex-shrink-0" />
-    <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account Settings</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account Settings
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/addfriend")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <UserPlus class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Add Friend</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Add Friend
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Account */}
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/account")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <User class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Account Settings - Submenu */}
+          <div class="relative group ml-4">
+            <button 
+              onClick={() => navigate("/accountsettings")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <Settings class="w-4 h-4 flex-shrink-0" />
+              <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account Settings</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account Settings
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
         </nav>
 
-        
-
-       
         {/* Logout Button */}
-<div class="relative group">
-  <button 
-    onClick={handleLogout} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <LogOut class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Log Out</span>
-  </button>
-  {/* Tooltip untuk collapsed state */}
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Log Out
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+        <div class="p-6">
+          <div class="relative group">
+            <button 
+              onClick={handleLogout} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <LogOut class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Log Out</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Log Out
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+        </div>
       </aside>
-
-
-      
 
       {/* Overlay for mobile */}
       {isSidebarOpen() && isMobile() && (
@@ -401,7 +491,7 @@ const handleLogout = () => {
               {isSidebarOpen() ? <ChevronLeft class="w-5 h-5" /> : <ChevronRight class="w-5 h-5" />}
             </button>
             <button
-              onClick={() => navigate("/finance")}
+              onClick={() => navigate("/dashboard")}
               class="p-2 bg-gray-800/90 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/90 transition-all duration-300"
             >
               <ArrowLeft class="w-5 h-5" />
@@ -661,7 +751,7 @@ const handleLogout = () => {
             
             <div class="flex gap-4">
               <button
-                onClick={() => navigate("/finance")}
+                onClick={() => navigate("/dashboard")}
                 class="px-6 py-3 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-700/50 text-gray-300 hover:bg-gray-700/60 hover:text-white transition-all duration-300"
               >
                 Cancel

@@ -14,6 +14,27 @@ interface FormErrors {
   phone?: string;
 }
 
+interface Friend {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  balance: number;
+  status: "owes_you" | "you_owe" | "settled";
+  avatar?: string;
+  addedDate: string;
+}
+
+interface Activity {
+  id: string;
+  friendId: string;
+  friendName: string;
+  action: "paid" | "split" | "reminder" | "settled";
+  amount: number;
+  description: string;
+  date: string;
+}
+
 export default function AddFriendPage() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = createSignal(true);
@@ -55,16 +76,10 @@ export default function AddFriendPage() {
   };
 
   const handleLogout = () => {
-  // Add logout logic here - clear auth tokens, redirect to login, etc.
-  if (confirm("Are you sure you want to log out?")) {
-    // Clear any stored authentication data
-    // localStorage.removeItem('auth_token'); // if using localStorage
-    // sessionStorage.clear(); // if using sessionStorage
-    
-    // Redirect to login page
-    navigate("/login");
-  }
-};
+    if (confirm("Are you sure you want to log out?")) {
+      navigate("/login");
+    }
+  };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -92,8 +107,67 @@ export default function AddFriendPage() {
       newErrors.phone = "Please enter a valid phone number";
     }
     
+    // Check if friend already exists
+    try {
+      const existingFriends = JSON.parse(localStorage.getItem('split_bills_friends') || '[]') as Friend[];
+      const emailExists = existingFriends.some(friend => friend.email.toLowerCase() === data.email.toLowerCase());
+      if (emailExists) {
+        newErrors.email = "A friend with this email already exists";
+      }
+    } catch (error) {
+      console.error('Error checking existing friends:', error);
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const generateId = () => {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  };
+
+  const saveFriendToLocalStorage = (friendData: FormData) => {
+    try {
+      // Get existing friends
+      const existingFriends = JSON.parse(localStorage.getItem('split_bills_friends') || '[]') as Friend[];
+      
+      // Create new friend object
+      const newFriend: Friend = {
+        id: generateId(),
+        name: friendData.name.trim(),
+        email: friendData.email.trim().toLowerCase(),
+        phone: friendData.phone.trim() || undefined,
+        balance: 0, // Start with 0 balance
+        status: "settled",
+        addedDate: new Date().toISOString()
+      };
+      
+      // Add to existing friends
+      const updatedFriends = [...existingFriends, newFriend];
+      
+      // Save to localStorage
+      localStorage.setItem('split_bills_friends', JSON.stringify(updatedFriends));
+      
+      // Create welcome activity
+      const existingActivities = JSON.parse(localStorage.getItem('split_bills_activities') || '[]') as Activity[];
+      const welcomeActivity: Activity = {
+        id: generateId(),
+        friendId: newFriend.id,
+        friendName: newFriend.name,
+        action: "settled",
+        amount: 0,
+        description: `Added ${newFriend.name} as a friend`,
+        date: new Date().toISOString()
+      };
+      
+      const updatedActivities = [welcomeActivity, ...existingActivities];
+      localStorage.setItem('split_bills_activities', JSON.stringify(updatedActivities));
+      
+      return true;
+    } catch (error) {
+      console.error('Error saving friend to localStorage:', error);
+      return false;
+    }
   };
 
   const handleSubmit = async (e: Event) => {
@@ -103,19 +177,27 @@ export default function AddFriendPage() {
     
     setIsSubmitting(true);
     
-    // Simulate API call
+    // Simulate API call delay
     setTimeout(() => {
+      const success = saveFriendToLocalStorage(formData());
+      
       setIsSubmitting(false);
-      setShowSuccess(true);
       
-      // Reset form
-      setFormData({ name: "", email: "", phone: "" });
-      
-      // Hide success message and navigate back
-      setTimeout(() => {
-        setShowSuccess(false);
-        navigate("/friends");
-      }, 2000);
+      if (success) {
+        setShowSuccess(true);
+        
+        // Reset form
+        setFormData({ name: "", email: "", phone: "" });
+        
+        // Hide success message and navigate back
+        setTimeout(() => {
+          setShowSuccess(false);
+          navigate("/friends");
+        }, 2000);
+      } else {
+        // Handle error case
+        setErrors({ email: "Failed to add friend. Please try again." });
+      }
     }, 1500);
   };
 
@@ -204,7 +286,7 @@ export default function AddFriendPage() {
             </button>
           </div>
 
- {/* Pay Bill */}
+          {/* Pay Bill */}
           <div class="relative group">
             <button 
               onClick={() => navigate("/paybill")} 
@@ -217,12 +299,6 @@ export default function AddFriendPage() {
                 isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
               }`}>Pay Bill</span>
             </button>
-            {!isSidebarOpen() && !isMobile() && (
-              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                Pay Bill
-                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-              </div>
-            )}
           </div>
 
           {/* Friends */}
@@ -239,90 +315,69 @@ export default function AddFriendPage() {
               }`}>Friends</span>
             </button>
           </div>
+
           {/* Add Friend */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/addfriend")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <UserPlus class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Add Friend</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Add Friend
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/account")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <User class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account Settings - Submenu */}
-<div class="relative group ml-4">
-  <button 
-    onClick={() => navigate("/accountsettings")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <Settings class="w-4 h-4 flex-shrink-0" />
-    <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account Settings</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account Settings
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/addfriend")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl bg-pink-500/10 text-pink-200 border border-pink-500/20 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <UserPlus class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Add Friend</span>
+            </button>
+          </div>
+
+          {/* Account */}
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/account")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <User class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account</span>
+            </button>
+          </div>
+
+          {/* Account Settings - Submenu */}
+          <div class="relative group ml-4">
+            <button 
+              onClick={() => navigate("/accountsettings")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <Settings class="w-4 h-4 flex-shrink-0" />
+              <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account Settings</span>
+            </button>
+          </div>
         </nav>
 
-       
         {/* Logout Button */}
-<div class="relative group">
-  <button 
-    onClick={handleLogout} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <LogOut class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Log Out</span>
-  </button>
-  {/* Tooltip untuk collapsed state */}
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Log Out
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+        <div class="p-6 border-t border-gray-700/50">
+          <div class="relative group">
+            <button 
+              onClick={handleLogout} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <LogOut class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Log Out</span>
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* Overlay for mobile */}
@@ -517,6 +572,10 @@ export default function AddFriendPage() {
             <li class="flex items-start gap-2">
               <div class="w-2 h-2 bg-pink-400 rounded-full mt-2 flex-shrink-0"></div>
               <span>Once added, you can start splitting bills with this friend immediately</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <div class="w-2 h-2 bg-pink-400 rounded-full mt-2 flex-shrink-0"></div>
+              <span>Duplicate email addresses are not allowed - each friend must have a unique email</span>
             </li>
           </ul>
         </div>

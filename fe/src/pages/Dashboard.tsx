@@ -28,7 +28,7 @@ export default function Dashboard() {
   }>>([]);
   const [isSearching, setIsSearching] = createSignal(false);
   
-  // Notification functionality - empty by default
+  // Notification functionality
   const [isNotificationOpen, setIsNotificationOpen] = createSignal(false);
   
   // Define types for better TypeScript support
@@ -37,6 +37,9 @@ export default function Dashboard() {
     total: number;
     description: string;
     participants: number;
+    category?: string;
+    splitType?: string;
+    createdAt?: string;
   }
 
   interface Friend {
@@ -56,10 +59,35 @@ export default function Dashboard() {
     icon: string;
   }
 
-  // Empty data states - will be populated when user adds data
+  // Data states - akan diisi dari localStorage saat mount
   const [splitBills, setSplitBills] = createSignal<SplitBill[]>([]);
   const [friends, setFriends] = createSignal<Friend[]>([]);
   const [notifications, setNotifications] = createSignal<Notification[]>([]);
+
+  // Load data dari localStorage saat component mount
+  const loadDataFromStorage = () => {
+    try {
+      // Load split bills
+      const storedBills = localStorage.getItem('splitBills');
+      if (storedBills) {
+        setSplitBills(JSON.parse(storedBills));
+      }
+
+      // Load friends
+      const storedFriends = localStorage.getItem('friends');
+      if (storedFriends) {
+        setFriends(JSON.parse(storedFriends));
+      }
+
+      // Load notifications
+      const storedNotifications = localStorage.getItem('notifications');
+      if (storedNotifications) {
+        setNotifications(JSON.parse(storedNotifications));
+      }
+    } catch (error) {
+      console.error('Error loading data from localStorage:', error);
+    }
+  };
 
   // Search data combining bills and friends
   const searchData = (): Array<{
@@ -125,19 +153,25 @@ export default function Dashboard() {
   const unreadCount = () => notifications().filter((n: Notification) => !n.read).length;
   
   const markNotificationAsRead = (id: number) => {
-    setNotifications((prev: Notification[]) => 
-      prev.map((notification: Notification) => 
+    setNotifications((prev: Notification[]) => {
+      const updated = prev.map((notification: Notification) => 
         notification.id === id 
           ? { ...notification, read: true }
           : notification
-      )
-    );
+      );
+      // Save to localStorage
+      localStorage.setItem('notifications', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const markAllAsRead = () => {
-    setNotifications((prev: Notification[]) => 
-      prev.map((notification: Notification) => ({ ...notification, read: true }))
-    );
+    setNotifications((prev: Notification[]) => {
+      const updated = prev.map((notification: Notification) => ({ ...notification, read: true }));
+      // Save to localStorage
+      localStorage.setItem('notifications', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const getNotificationIcon = (iconType: string) => {
@@ -171,7 +205,12 @@ export default function Dashboard() {
     }
   };
 
+  let chart: am4charts.XYChart;
+
   onMount(() => {
+    // Load data dari localStorage saat component mount
+    loadDataFromStorage();
+    
     document.addEventListener('click', handleClickOutside);
     
     const checkMobile = () => {
@@ -184,8 +223,8 @@ export default function Dashboard() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
-    // Initialize empty chart
-    const chart = am4core.create("chartdiv", am4charts.XYChart);
+    // Initialize chart
+    chart = am4core.create("chartdiv", am4charts.XYChart);
     chart.paddingRight = 20;
     chart.paddingLeft = 20;
     chart.paddingTop = 20;
@@ -220,21 +259,35 @@ export default function Dashboard() {
     bullet.circle.stroke = am4core.color("#ffffff");
     bullet.circle.strokeWidth = 2;
 
-    // Update chart when splitBills changes
-    createEffect(() => {
-      if (chart && splitBills().length > 0) {
-        chart.data = splitBills().map((bill: SplitBill) => ({
-          date: new Date(bill.date),
-          value: bill.total,
-        }));
-      }
-    });
+    // Reload data setiap kali halaman difokuskan (untuk mendeteksi perubahan dari halaman lain)
+    const handleFocus = () => {
+      loadDataFromStorage();
+    };
+    
+    window.addEventListener('focus', handleFocus);
 
     return () => {
-      chart.dispose();
+      if (chart) chart.dispose();
       window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('focus', handleFocus);
       document.removeEventListener('click', handleClickOutside);
     };
+  });
+
+  // Update chart when splitBills changes
+  createEffect(() => {
+    if (chart && splitBills().length > 0) {
+      const chartData = splitBills()
+        .map((bill: SplitBill) => ({
+          date: new Date(bill.date),
+          value: bill.total,
+        }))
+        .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date
+      
+      chart.data = chartData;
+    } else if (chart) {
+      chart.data = [];
+    }
   });
 
   const handleDateClick = (date: any) => {
@@ -706,7 +759,9 @@ export default function Dashboard() {
               <div class="p-3 bg-pink-200/10 rounded-xl">
                 <Wallet class="w-6 h-6 text-pink-200" />
               </div>
-              <span class="text-gray-500 text-sm font-medium">--</span>
+              <span class="text-gray-500 text-sm font-medium">
+                {splitBills().length > 0 ? `${splitBills().length} bills` : '--'}
+              </span>
             </div>
             <h3 class="text-2xl font-bold text-white">Rp {totalExpenses().toLocaleString()}</h3>
             <p class="text-gray-400 text-sm">Total Expenses</p>

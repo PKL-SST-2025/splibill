@@ -1,6 +1,27 @@
 import { createSignal, onMount, For } from "solid-js";
-import { DollarSign, Users, Heart, TrendingUp, ArrowUp, ArrowDown, CreditCard, UserPlus, Search, ChevronLeft, ChevronRight, Menu, X, Sparkles, Plus, MessageCircle, Calendar, Clock,LogOut, Settings, User } from "lucide-solid";
+import { DollarSign, Users, Heart, TrendingUp, ArrowUp, ArrowDown, CreditCard, UserPlus, Search, ChevronLeft, ChevronRight, Menu, X, Sparkles, Plus, MessageCircle, Calendar, Clock, LogOut, Settings, User, Mail, Phone, Trash2 } from "lucide-solid";
 import { useNavigate } from "@solidjs/router";
+
+interface Friend {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  balance: number; // positive if they owe you, negative if you owe them
+  status: "owes_you" | "you_owe" | "settled";
+  avatar?: string;
+  addedDate: string;
+}
+
+interface Activity {
+  id: string;
+  friendId: string;
+  friendName: string;
+  action: "paid" | "split" | "reminder" | "settled";
+  amount: number;
+  description: string;
+  date: string;
+}
 
 export default function FriendsPage() {
   const navigate = useNavigate();
@@ -8,80 +29,42 @@ export default function FriendsPage() {
   const [isMobile, setIsMobile] = createSignal(false);
   const [animate, setAnimate] = createSignal(false);
   
-  // Sample friends data
-  const [friends] = createSignal([
-    { 
-      id: 1, 
-      name: "Budi Santoso", 
-      avatar: "B", 
-      balance: 250000, 
-      status: "owes_you", 
-      email: "budi@email.com",
-      lastActivity: "2025-07-12",
-      totalBills: 5
-    },
-    { 
-      id: 2, 
-      name: "Sari Dewi", 
-      avatar: "S", 
-      balance: -150000, 
-      status: "you_owe", 
-      email: "sari@email.com",
-      lastActivity: "2025-07-11",
-      totalBills: 3
-    },
-    { 
-      id: 3, 
-      name: "Dina Kartika", 
-      avatar: "D", 
-      balance: 75000, 
-      status: "owes_you", 
-      email: "dina@email.com",
-      lastActivity: "2025-07-10",
-      totalBills: 2
-    },
-    { 
-      id: 4, 
-      name: "Andi Wijaya", 
-      avatar: "A", 
-      balance: 0, 
-      status: "settled", 
-      email: "andi@email.com",
-      lastActivity: "2025-07-09",
-      totalBills: 1
-    },
-    { 
-      id: 5, 
-      name: "Maya Putri", 
-      avatar: "M", 
-      balance: 180000, 
-      status: "owes_you", 
-      email: "maya@email.com",
-      lastActivity: "2025-07-08",
-      totalBills: 4
-    },
-    { 
-      id: 6, 
-      name: "Rio Permana", 
-      avatar: "R", 
-      balance: -90000, 
-      status: "you_owe", 
-      email: "rio@email.com",
-      lastActivity: "2025-07-07",
-      totalBills: 2
-    },
-  ]);
+  // Friends data from localStorage
+  const [friends, setFriends] = createSignal<Friend[]>([]);
+  const [recentActivities, setRecentActivities] = createSignal<Activity[]>([]);
 
-  const [recentActivities] = createSignal([
-    { id: 1, friend: "Budi", action: "paid", amount: 120000, date: "2025-07-12", description: "Dinner at Sushi Tei" },
-    { id: 2, friend: "Sari", action: "split", amount: 300000, date: "2025-07-11", description: "Bali Trip Expenses" },
-    { id: 3, friend: "Dina", action: "reminder", amount: 75000, date: "2025-07-10", description: "Coffee Meeting" },
-    { id: 4, friend: "Andi", action: "settled", amount: 85000, date: "2025-07-09", description: "Team Lunch" },
-    { id: 5, friend: "Maya", action: "paid", amount: 95000, date: "2025-07-08", description: "Movie Night" },
-    { id: 6, friend: "Rio", action: "split", amount: 200000, date: "2025-07-07", description: "Weekend Trip" },
-    { id: 7, friend: "Budi", action: "reminder", amount: 130000, date: "2025-07-06", description: "Restaurant Bill" },
-    { id: 8, friend: "Sari", action: "settled", amount: 45000, date: "2025-07-05", description: "Gas Money" },
-  ]);
+  // Load friends from localStorage
+  const loadFriends = () => {
+    try {
+      const storedFriends = localStorage.getItem('split_bills_friends');
+      if (storedFriends) {
+        const parsedFriends = JSON.parse(storedFriends);
+        setFriends(parsedFriends);
+      }
+      
+      const storedActivities = localStorage.getItem('split_bills_activities');
+      if (storedActivities) {
+        const parsedActivities = JSON.parse(storedActivities);
+        setRecentActivities(parsedActivities);
+      }
+    } catch (error) {
+      console.error('Error loading friends from localStorage:', error);
+    }
+  };
+
+  // Delete friend
+  const deleteFriend = (friendId: string) => {
+    if (confirm("Are you sure you want to remove this friend?")) {
+      const updatedFriends = friends().filter(friend => friend.id !== friendId);
+      setFriends(updatedFriends);
+      localStorage.setItem('split_bills_friends', JSON.stringify(updatedFriends));
+      
+      // Also remove activities related to this friend
+      const updatedActivities = recentActivities().filter(activity => activity.friendId !== friendId);
+      setRecentActivities(updatedActivities);
+      localStorage.setItem('split_bills_activities', JSON.stringify(updatedActivities));
+    }
+  };
 
   onMount(() => {
     const checkMobile = () => {
@@ -93,6 +76,9 @@ export default function FriendsPage() {
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    // Load friends data
+    loadFriends();
     
     // Animation delay
     setTimeout(() => setAnimate(true), 100);
@@ -107,19 +93,24 @@ export default function FriendsPage() {
   };
 
   const handleLogout = () => {
-  // Add logout logic here - clear auth tokens, redirect to login, etc.
-  if (confirm("Are you sure you want to log out?")) {
-    // Clear any stored authentication data
-    // localStorage.removeItem('auth_token'); // if using localStorage
-    // sessionStorage.clear(); // if using sessionStorage
-    
-    // Redirect to login page
-    navigate("/login");
-  }
-};
+    if (confirm("Are you sure you want to log out?")) {
+      navigate("/login");
+    }
+  };
 
-  const totalOwedToYou = () => friends().filter(f => f.balance > 0).reduce((sum, f) => sum + f.balance, 0);
-  const totalYouOwe = () => friends().filter(f => f.balance < 0).reduce((sum, f) => sum + Math.abs(f.balance), 0);
+  // Calculate totals
+  const totalOwedToYou = () => {
+    return friends().reduce((total, friend) => {
+      return total + (friend.balance > 0 ? friend.balance : 0);
+    }, 0);
+  };
+
+  const totalYouOwe = () => {
+    return friends().reduce((total, friend) => {
+      return total + (friend.balance < 0 ? Math.abs(friend.balance) : 0);
+    }, 0);
+  };
+
   const totalFriends = () => friends().length;
 
   const getStatusColor = (status: string) => {
@@ -158,6 +149,19 @@ export default function FriendsPage() {
       case "settled": return "text-purple-400";
       default: return "text-gray-400";
     }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   return (
@@ -285,11 +289,10 @@ export default function FriendsPage() {
           </div>
 
            {/* Friends */}
-        
           <div class="relative group">
             <button 
               onClick={() => navigate("/friends")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+              class={`w-full flex items-center gap-3 p-3 rounded-xl bg-pink-500/10 text-pink-200 border border-pink-500/20 transition-all duration-300 ${
                 !isSidebarOpen() ? 'justify-center' : ''
               }`}
             >
@@ -305,90 +308,93 @@ export default function FriendsPage() {
               </div>
             )}
           </div>
+          
           {/* Add Friend */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/addfriend")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <UserPlus class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Add Friend</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Add Friend
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/account")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <User class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account Settings - Submenu */}
-<div class="relative group ml-4">
-  <button 
-    onClick={() => navigate("/accountsettings")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <Settings class="w-4 h-4 flex-shrink-0" />
-    <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account Settings</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account Settings
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/addfriend")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <UserPlus class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Add Friend</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Add Friend
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+          
+          {/* Account */}
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/account")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <User class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+          
+          {/* Account Settings - Submenu */}
+          <div class="relative group ml-4">
+            <button 
+              onClick={() => navigate("/accountsettings")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <Settings class="w-4 h-4 flex-shrink-0" />
+              <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account Settings</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account Settings
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
         </nav>
 
-      
         {/* Logout Button */}
-<div class="relative group">
-  <button 
-    onClick={handleLogout} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <LogOut class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Log Out</span>
-  </button>
-  {/* Tooltip untuk collapsed state */}
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Log Out
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+        <div class="p-6 border-t border-gray-700/50">
+          <div class="relative group">
+            <button 
+              onClick={handleLogout} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <LogOut class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Log Out</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Log Out
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+        </div>
       </aside>
 
       {/* Overlay for mobile */}
@@ -406,7 +412,6 @@ export default function FriendsPage() {
         {/* Header */}
         <header class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pt-12 lg:pt-0">
           <div class="flex items-center gap-2">
-            {/* Desktop sidebar toggle button */}
             <button
               onClick={toggleSidebar}
               class="hidden lg:block p-2 bg-gray-800/90 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/90 transition-all duration-300"
@@ -427,7 +432,7 @@ export default function FriendsPage() {
             <button class="p-2 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/60 transition-all duration-300">
               <MessageCircle class="w-5 h-5" />
             </button>
-          <button 
+            <button 
               onClick={() => navigate("/AddFriend")}
               class="bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-6 py-3 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
             >
@@ -448,7 +453,7 @@ export default function FriendsPage() {
                 <span class="text-emerald-400 text-sm font-medium">Owed to you</span>
               </div>
             </div>
-            <h3 class="text-2xl font-bold text-white">Rp {totalOwedToYou().toLocaleString()}</h3>
+            <h3 class="text-2xl font-bold text-white">{formatCurrency(totalOwedToYou())}</h3>
             <p class="text-gray-400 text-sm">Total Amount</p>
           </div>
 
@@ -461,7 +466,7 @@ export default function FriendsPage() {
                 <span class="text-red-400 text-sm font-medium">You owe</span>
               </div>
             </div>
-            <h3 class="text-2xl font-bold text-white">Rp {totalYouOwe().toLocaleString()}</h3>
+            <h3 class="text-2xl font-bold text-white">{formatCurrency(totalYouOwe())}</h3>
             <p class="text-gray-400 text-sm">Total Amount</p>
           </div>
 
@@ -479,7 +484,7 @@ export default function FriendsPage() {
           </div>
         </div>
 
-        {/* Friends List - Made Scrollable */}
+        {/* Friends List */}
         <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 800ms">
           <div class="flex items-center gap-3 mb-6">
             <div class="p-2 bg-pink-500/20 rounded-xl">
@@ -487,97 +492,94 @@ export default function FriendsPage() {
             </div>
             <h2 class="text-xl font-bold text-white">Your Friends</h2>
           </div>
-          {/* Scrollable Container */}
-          <div class="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-pink-200/30 hover:scrollbar-thumb-pink-200/50">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {friends().length === 0 ? (
+            /* Empty State */
+            <div class="flex flex-col items-center justify-center py-12">
+              <div class="w-24 h-24 bg-gray-800/40 rounded-full flex items-center justify-center mb-6">
+                <Users class="w-12 h-12 text-gray-500" />
+              </div>
+              <h3 class="text-xl font-semibold text-white mb-2">No Friends Yet</h3>
+              <p class="text-gray-400 text-center mb-6 max-w-md">
+                Start by adding friends to split bills and track expenses together. Click the "Add Friend" button to get started.
+              </p>
+              <button 
+                onClick={() => navigate("/AddFriend")}
+                class="bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-6 py-3 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
+              >
+                <UserPlus class="w-4 h-4 inline mr-2" />
+                Add Your First Friend
+              </button>
+            </div>
+          ) : (
+            /* Friends List */
+            <div class="space-y-4">
               <For each={friends()}>
                 {(friend) => (
-                  <div class="p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-                    <div class="flex items-center justify-between mb-3">
-                      <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-gradient-to-br from-pink-200 to-pink-300 rounded-full flex items-center justify-center">
-                          <span class="text-gray-800 font-bold text-lg">{friend.avatar}</span>
+                  <div class="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-[1.02]">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-4">
+                        {/* Avatar */}
+                        <div class={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
+                          friend.avatar ? 'bg-cover bg-center' : 'bg-gradient-to-br from-pink-400 to-purple-500'
+                        }`}>
+                          {friend.avatar ? (
+                            <img src={friend.avatar} alt={friend.name} class="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            getInitials(friend.name)
+                          )}
                         </div>
+                        
+                        {/* Friend Info */}
                         <div>
-                          <p class="font-semibold text-white">{friend.name}</p>
-                          <p class="text-gray-400 text-sm">{friend.email}</p>
+                          <h3 class="font-semibold text-white">{friend.name}</h3>
+                          <div class="flex items-center gap-4 text-sm text-gray-400">
+                            <div class="flex items-center gap-1">
+                              <Mail class="w-3 h-3" />
+                              {friend.email}
+                            </div>
+                            {friend.phone && (
+                              <div class="flex items-center gap-1">
+                                <Phone class="w-3 h-3" />
+                                {friend.phone}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div class={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBg(friend.status)}`}>
-                        <span class={getStatusColor(friend.status)}>
-                          {friend.status === "owes_you" ? "Owes You" : 
-                           friend.status === "you_owe" ? "You Owe" : "Settled"}
-                        </span>
+                      
+                      {/* Balance and Actions */}
+                      <div class="flex items-center gap-4">
+                        {/* Balance */}
+                        <div class="text-right">
+                          <div class={`text-lg font-bold ${getStatusColor(friend.status)}`}>
+                            {friend.balance === 0 ? 'Settled' : formatCurrency(Math.abs(friend.balance))}
+                          </div>
+                          <div class={`text-xs px-2 py-1 rounded-full ${getStatusBg(friend.status)} ${getStatusColor(friend.status)}`}>
+                            {friend.status === 'owes_you' ? 'Owes you' : 
+                             friend.status === 'you_owe' ? 'You owe' : 'Settled'}
+                          </div>
+                        </div>
+                        
+                        {/* Actions */}
+                        <div class="flex items-center gap-2">
+                          <button class="p-2 bg-gray-700/50 hover:bg-pink-500/20 rounded-lg transition-all duration-300 group">
+                            <MessageCircle class="w-4 h-4 text-gray-400 group-hover:text-pink-400" />
+                          </button>
+                          <button 
+                            onClick={() => deleteFriend(friend.id)}
+                            class="p-2 bg-gray-700/50 hover:bg-red-500/20 rounded-lg transition-all duration-300 group"
+                          >
+                            <Trash2 class="w-4 h-4 text-gray-400 group-hover:text-red-400" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="text-gray-400 text-sm">Balance:</span>
-                      <span class={`font-bold ${friend.balance > 0 ? 'text-emerald-400' : friend.balance < 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                        {friend.balance === 0 ? 'Settled' : `Rp ${Math.abs(friend.balance).toLocaleString()}`}
-                      </span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between text-sm text-gray-400">
-                      <div class="flex items-center gap-1">
-                        <Calendar class="w-4 h-4" />
-                        <span>{friend.lastActivity}</span>
-                      </div>
-                      <span>{friend.totalBills} bills</span>
                     </div>
                   </div>
                 )}
               </For>
             </div>
-          </div>
-        </div>
-
-        {/* Recent Activities - Made Scrollable */}
-        <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="p-2 bg-amber-500/20 rounded-xl">
-              <Clock class="w-5 h-5 text-amber-400" />
-            </div>
-            <h2 class="text-xl font-bold text-white">Recent Activities</h2>
-          </div>
-          {/* Scrollable Container */}
-          <div class="max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-pink-200/30 hover:scrollbar-thumb-pink-200/50">
-            <div class="space-y-4">
-              <For each={recentActivities()}>
-                {(activity) => {
-                  const IconComponent = getActivityIcon(activity.action);
-                  return (
-                    <div class="p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
-                      <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-3">
-                          <div class={`w-10 h-10 rounded-xl flex items-center justify-center ${getStatusBg(activity.action)}`}>
-                            <IconComponent class={`w-5 h-5 ${getActivityColor(activity.action)}`} />
-                          </div>
-                          <div>
-                            <p class="font-semibold text-white">
-                              {activity.friend} {activity.action === "paid" ? "paid you" : 
-                               activity.action === "split" ? "split a bill" :
-                               activity.action === "reminder" ? "received reminder" : "settled up"}
-                            </p>
-                            <p class="text-gray-400 text-sm">{activity.description}</p>
-                          </div>
-                        </div>
-                        <div class="text-right">
-                          <p class={`font-bold ${getActivityColor(activity.action)}`}>
-                            Rp {activity.amount.toLocaleString()}
-                          </p>
-                          <div class="flex items-center gap-1 text-gray-400 text-sm">
-                            <Calendar class="w-4 h-4" />
-                            <span>{activity.date}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }}
-              </For>
-            </div>
-          </div>
+          )}
         </div>
       </main>
     </div>
