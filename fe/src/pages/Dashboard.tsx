@@ -2,7 +2,7 @@ import { createSignal, createEffect, For, onMount } from "solid-js";
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import am4themesAnimated from "@amcharts/amcharts4/themes/animated";
-import { CalendarDays, Users, Plus, Sparkles, TrendingUp, Wallet, Clock, Bell, Search, Menu, UserPlus, X, ChevronLeft, ChevronRight, LogOut, CreditCard, Settings, User, Check, AlertCircle, Info, DollarSign } from "lucide-solid";
+import { CalendarDays, Users, Plus, Sparkles, TrendingUp, Wallet, Clock, Bell, Search, Menu, UserPlus, X, ChevronLeft, ChevronRight, LogOut, CreditCard, Settings, User, Check, AlertCircle, Info, DollarSign, Trash2, CheckCircle } from "lucide-solid";
 import { useNavigate } from "@solidjs/router";
 
 // Theme
@@ -40,6 +40,9 @@ export default function Dashboard() {
     category?: string;
     splitType?: string;
     createdAt?: string;
+    status?: 'active' | 'paid' | 'partial'; // Add status field
+    paidDate?: string; // When it was paid
+    paidAmount?: number; // How much was paid
   }
 
   interface Friend {
@@ -70,7 +73,13 @@ export default function Dashboard() {
       // Load split bills
       const storedBills = localStorage.getItem('splitBills');
       if (storedBills) {
-        setSplitBills(JSON.parse(storedBills));
+        const bills = JSON.parse(storedBills);
+        // Ensure all bills have a status (for backward compatibility)
+        const billsWithStatus = bills.map((bill: SplitBill) => ({
+          ...bill,
+          status: bill.status || 'active' // Default to active if not set
+        }));
+        setSplitBills(billsWithStatus);
       }
 
       // Load friends
@@ -89,6 +98,89 @@ export default function Dashboard() {
     }
   };
 
+  // Delete bill function
+  const deleteBill = (billIndex: number) => {
+    const bill = splitBills()[billIndex];
+    const confirmMessage = `Are you sure you want to delete "${bill.description}"?\nAmount: Rp ${bill.total.toLocaleString()}\nThis action cannot be undone.`;
+    
+    if (confirm(confirmMessage)) {
+      const updatedBills = splitBills().filter((_, index) => index !== billIndex);
+      setSplitBills(updatedBills);
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('splitBills', JSON.stringify(updatedBills));
+        
+        // Add notification for deleted bill
+        const newNotification: Notification = {
+          id: Date.now(),
+          type: 'info',
+          title: 'Bill Deleted',
+          message: `"${bill.description}" has been deleted successfully`,
+          time: new Date().toLocaleTimeString(),
+          read: false,
+          icon: 'info'
+        };
+        
+        const currentNotifications = notifications();
+        const updatedNotifications = [newNotification, ...currentNotifications];
+        setNotifications(updatedNotifications);
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        
+        console.log('Bill deleted successfully');
+      } catch (error) {
+        console.error('Error saving updated bills to localStorage:', error);
+        alert('Error deleting bill. Please try again.');
+      }
+    }
+  };
+
+  // Mark bill as paid function
+  const markBillAsPaid = (billIndex: number) => {
+    const bill = splitBills()[billIndex];
+    const confirmMessage = `Mark "${bill.description}" as paid?\nAmount: Rp ${bill.total.toLocaleString()}`;
+    
+    if (confirm(confirmMessage)) {
+      const updatedBills = splitBills().map((b, index) => 
+        index === billIndex 
+          ? { 
+              ...b, 
+              status: 'paid' as const, 
+              paidDate: new Date().toISOString().split('T')[0],
+              paidAmount: b.total
+            }
+          : b
+      );
+      setSplitBills(updatedBills);
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('splitBills', JSON.stringify(updatedBills));
+        
+        // Add notification for paid bill
+        const newNotification: Notification = {
+          id: Date.now(),
+          type: 'payment',
+          title: 'Bill Marked as Paid',
+          message: `"${bill.description}" has been marked as paid - Rp ${bill.total.toLocaleString()}`,
+          time: new Date().toLocaleTimeString(),
+          read: false,
+          icon: 'check'
+        };
+        
+        const currentNotifications = notifications();
+        const updatedNotifications = [newNotification, ...currentNotifications];
+        setNotifications(updatedNotifications);
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        
+        console.log('Bill marked as paid successfully');
+      } catch (error) {
+        console.error('Error saving updated bills to localStorage:', error);
+        alert('Error updating bill status. Please try again.');
+      }
+    }
+  };
+
   // Search data combining bills and friends
   const searchData = (): Array<{
     type: string;
@@ -103,6 +195,7 @@ export default function Dashboard() {
       title: bill.description,
       subtitle: `Rp ${bill.total.toLocaleString()} • ${bill.participants} people`,
       date: bill.date,
+      status: bill.status,
       id: `bill-${bill.date}-${index}`
     })),
     ...friends().map((friend, index) => ({
@@ -304,9 +397,42 @@ export default function Dashboard() {
     }
   };
 
+  // Updated stats calculations to include paid bills
   const totalExpenses = () => splitBills().reduce((sum: number, bill: SplitBill) => sum + bill.total, 0);
+  const activeBills = () => splitBills().filter((b: SplitBill) => b.status !== 'paid').length;
+  const paidBills = () => splitBills().filter((b: SplitBill) => b.status === 'paid').length;
   const pendingPayments = () => friends().filter((f: Friend) => f.status === "Waiting").length;
   const todayBills = () => splitBills().filter((b: SplitBill) => b.date === selectedDate().toISOString().split("T")[0]);
+
+  // Helper function to get bill status color and icon
+  const getBillStatusInfo = (bill: SplitBill) => {
+    switch (bill.status) {
+      case 'paid':
+        return {
+          color: 'text-green-400',
+          bgColor: 'bg-green-400/10',
+          borderColor: 'border-green-400/20',
+          icon: CheckCircle,
+          label: 'Paid'
+        };
+      case 'partial':
+        return {
+          color: 'text-yellow-400',
+          bgColor: 'bg-yellow-400/10',
+          borderColor: 'border-yellow-400/20',
+          icon: Clock,
+          label: 'Partial'
+        };
+      default:
+        return {
+          color: 'text-pink-200',
+          bgColor: 'bg-pink-200/10',
+          borderColor: 'border-pink-200/20',
+          icon: Wallet,
+          label: 'Active'
+        };
+    }
+  };
 
   return (
     <div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex relative overflow-hidden">
@@ -649,6 +775,17 @@ export default function Dashboard() {
                                     {result.status}
                                   </span>
                                 )}
+                                {result.type === 'bill' && result.status && (
+                                  <span class={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    result.status === "paid" 
+                                      ? "bg-green-500/20 text-green-400"
+                                      : result.status === "partial"
+                                      ? "bg-yellow-500/20 text-yellow-400"
+                                      : "bg-pink-500/20 text-pink-400"
+                                  }`}>
+                                    {result.status === "paid" ? "Paid" : result.status === "partial" ? "Partial" : "Active"}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           )}
@@ -752,8 +889,8 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Stats Cards */}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        {/* Stats Cards - Updated to show active vs paid bills */}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group">
             <div class="flex items-center justify-between mb-4">
               <div class="p-3 bg-pink-200/10 rounded-xl">
@@ -769,24 +906,35 @@ export default function Dashboard() {
 
           <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group">
             <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-yellow-500/10 rounded-xl">
+                <Clock class="w-6 h-6 text-yellow-400" />
+              </div>
+              <span class="text-gray-500 text-sm font-medium">{activeBills()} active</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white">{activeBills()}</h3>
+            <p class="text-gray-400 text-sm">Active Bills</p>
+          </div>
+
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-green-500/10 rounded-xl">
+                <CheckCircle class="w-6 h-6 text-green-400" />
+              </div>
+              <span class="text-gray-500 text-sm font-medium">{paidBills()} paid</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white">{paidBills()}</h3>
+            <p class="text-gray-400 text-sm">Paid Bills</p>
+          </div>
+
+          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group">
+            <div class="flex items-center justify-between mb-4">
               <div class="p-3 bg-pink-200/10 rounded-xl">
-                <Clock class="w-6 h-6 text-pink-200" />
+                <Users class="w-6 h-6 text-pink-200" />
               </div>
               <span class="text-gray-500 text-sm font-medium">{pendingPayments()} pending</span>
             </div>
             <h3 class="text-2xl font-bold text-white">{friends().length}</h3>
             <p class="text-gray-400 text-sm">Active Friends</p>
-          </div>
-
-          <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 group md:col-span-2 lg:col-span-1">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-3 bg-pink-200/10 rounded-xl">
-                <TrendingUp class="w-6 h-6 text-pink-200" />
-              </div>
-              <span class="text-gray-500 text-sm font-medium">Today</span>
-            </div>
-            <h3 class="text-2xl font-bold text-white">{todayBills().length}</h3>
-            <p class="text-gray-400 text-sm">Today's Bills</p>
           </div>
         </div>
 
@@ -813,16 +961,26 @@ export default function Dashboard() {
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activities with Enhanced Scrolling */}
+          {/* Recent Activities with Enhanced Scrolling, Delete Functionality, and Status Display */}
           <div class="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-300 flex flex-col overflow-hidden">
             <div class="flex items-center justify-between p-6 border-b border-gray-700/50 bg-gray-900/40">
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
                 <CalendarDays class="w-5 h-5 text-pink-200" />
                 Recent Activities
               </h2>
-              <span class="text-sm text-gray-400">
-                {splitBills().length} bills
-              </span>
+              <div class="flex items-center gap-2 text-sm text-gray-400">
+                <span>{splitBills().length} bills</span>
+                {activeBills() > 0 && (
+                  <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">
+                    {activeBills()} active
+                  </span>
+                )}
+                {paidBills() > 0 && (
+                  <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
+                    {paidBills()} paid
+                  </span>
+                )}
+              </div>
             </div>
             
             {splitBills().length > 0 ? (
@@ -832,23 +990,87 @@ export default function Dashboard() {
                   <div class="h-full overflow-y-auto scrollbar-none hover:scrollbar-thin scrollbar-thumb-pink-200/30 scrollbar-track-transparent px-6 py-4">
                     <div class="space-y-3">
                       <For each={splitBills()}>
-                        {(bill: SplitBill) => (
-                          <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-800/20 to-gray-800/40 rounded-xl border border-gray-700/20 hover:from-gray-800/40 hover:to-gray-800/60 hover:border-pink-200/20 transition-all duration-300 group backdrop-blur-sm">
-                            <div class="flex items-center gap-3">
-                              <div class="w-10 h-10 bg-gradient-to-br from-pink-200/10 to-pink-200/20 rounded-xl flex items-center justify-center group-hover:from-pink-200/20 group-hover:to-pink-200/30 transition-all duration-300">
-                                <Wallet class="w-5 h-5 text-pink-200" />
+                        {(bill: SplitBill, index) => {
+                          const statusInfo = getBillStatusInfo(bill);
+                          const StatusIcon = statusInfo.icon;
+                          
+                          return (
+                            <div class={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 group backdrop-blur-sm ${
+                              bill.status === 'paid' 
+                                ? 'bg-gradient-to-r from-green-900/10 to-green-800/20 border-green-700/20 hover:from-green-900/20 hover:to-green-800/30 hover:border-green-600/20'
+                                : 'bg-gradient-to-r from-gray-800/20 to-gray-800/40 border-gray-700/20 hover:from-gray-800/40 hover:to-gray-800/60 hover:border-pink-200/20'
+                            }`}>
+                              <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div class={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
+                                  bill.status === 'paid'
+                                    ? 'bg-gradient-to-br from-green-400/10 to-green-400/20 group-hover:from-green-400/20 group-hover:to-green-400/30'
+                                    : 'bg-gradient-to-br from-pink-200/10 to-pink-200/20 group-hover:from-pink-200/20 group-hover:to-pink-200/30'
+                                }`}>
+                                  <StatusIcon class={`w-5 h-5 ${statusInfo.color}`} />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                  <div class="flex items-center gap-2 mb-1">
+                                    <p class={`font-medium transition-colors duration-300 truncate ${
+                                      bill.status === 'paid' ? 'text-green-100 group-hover:text-green-50' : 'text-white group-hover:text-pink-100'
+                                    }`}>
+                                      {bill.description}
+                                    </p>
+                                    <span class={`px-2 py-1 rounded-full text-xs font-medium border ${statusInfo.bgColor} ${statusInfo.color} ${statusInfo.borderColor}`}>
+                                      {statusInfo.label}
+                                    </span>
+                                  </div>
+                                  <div class="flex items-center gap-2 text-sm text-gray-400">
+                                    <span>{bill.date}</span>
+                                    <span>•</span>
+                                    <span>{bill.participants} people</span>
+                                    {bill.status === 'paid' && bill.paidDate && (
+                                      <>
+                                        <span>•</span>
+                                        <span class="text-green-400">Paid on {bill.paidDate}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                              <div>
-                                <p class="font-medium text-white group-hover:text-pink-100 transition-colors duration-300">{bill.description}</p>
-                                <p class="text-sm text-gray-400">{bill.date} • {bill.participants} people</p>
+                              <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="text-right">
+                                  <p class={`font-bold ${bill.status === 'paid' ? 'text-green-400' : 'text-pink-200'}`}>
+                                    Rp {bill.total.toLocaleString()}
+                                  </p>
+                                  <p class="text-xs text-gray-500">
+                                    Per person: Rp {Math.round(bill.total / bill.participants).toLocaleString()}
+                                  </p>
+                                </div>
+                                <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                  {/* Mark as Paid Button - only show for active bills */}
+                                  {bill.status !== 'paid' && (
+                                    <button
+                                      onClick={(e: Event) => {
+                                        e.stopPropagation();
+                                        markBillAsPaid(index());
+                                      }}
+                                      class="p-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:text-green-300 rounded-lg transition-all duration-200 border border-green-500/20 hover:border-green-500/40"
+                                      title="Mark as paid"
+                                    >
+                                      <CheckCircle class="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  {/* Delete Button */}
+                                  <button
+                                    onClick={(e: Event) => {
+                                      e.stopPropagation();
+                                      deleteBill(index());
+                                    }}
+                                    class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-all duration-200 border border-red-500/20 hover:border-red-500/40"
+                                    title="Delete bill"
+                                  >
+                                    <Trash2 class="w-4 h-4" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                            <div class="text-right">
-                              <p class="font-bold text-pink-200">Rp {bill.total.toLocaleString()}</p>
-                              <p class="text-xs text-gray-500">Per person: Rp {Math.round(bill.total / bill.participants).toLocaleString()}</p>
-                            </div>
-                          </div>
-                        )}
+                          );
+                        }}
                       </For>
                     </div>
                   </div>

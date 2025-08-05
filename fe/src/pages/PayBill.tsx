@@ -1,8 +1,49 @@
 // src/pages/PayBillPage.tsx
 
-import { createSignal, onMount, For } from "solid-js";
-import { DollarSign, Clock, Heart, TrendingUp, ArrowUp, ArrowDown, CreditCard, Wallet, Users, UserPlus, Calendar, Bell, Search, ChevronLeft, ChevronRight, Menu, X, Sparkles, Plus, LogOut, CheckCircle, AlertCircle,Settings, User } from "lucide-solid";
+import { createSignal, onMount, For, createEffect } from "solid-js";
+import { DollarSign, Clock, Heart, TrendingUp, ArrowUp, ArrowDown, CreditCard, Wallet, Users, UserPlus, Calendar, Bell, Search, ChevronLeft, ChevronRight, Menu, X, Sparkles, Plus, LogOut, CheckCircle, AlertCircle, Settings, User, FileText, Receipt, Trash2 } from "lucide-solid";
 import { useNavigate } from "@solidjs/router";
+
+interface Bill {
+  id: number;
+  title: string;
+  amount: number;
+  totalAmount: number; // Store original total amount
+  status: string;
+  group: string;
+  date: string;
+  dueDate: string;
+  icon: any;
+  description?: string;
+  participants?: number;
+  category?: string;
+  splitType?: string;
+  createdAt?: string;
+}
+
+interface Payment {
+  id: number;
+  title: string;
+  amount: number;
+  totalAmount: number; // Store original total amount
+  status: string;
+  group: string;
+  date: string;
+  icon: any;
+}
+
+interface SplitBill {
+  date: string;
+  total: number;
+  description: string;
+  participants: number;
+  category?: string;
+  splitType?: string;
+  createdAt?: string;
+  status?: 'active' | 'paid' | 'partial'; // Add status field
+  paidDate?: string; // When it was paid
+  paidAmount?: number; // How much was paid
+}
 
 export default function PayBillPage() {
   const navigate = useNavigate();
@@ -10,26 +51,123 @@ export default function PayBillPage() {
   const [isMobile, setIsMobile] = createSignal(false);
   const [animate, setAnimate] = createSignal(false);
   
-  // Sample data for bills to pay
-  const [billsToPay] = createSignal([
-    { id: 1, title: "Split Bill - Dinner at Sushi Tei", amount: 120000, status: "Unpaid", group: "Rina, Agus", date: "2025-07-12", dueDate: "2025-07-15", icon: DollarSign },
-    { id: 2, title: "Trip to Bandung", amount: 300000, status: "Unpaid", group: "Lina, Bagus", date: "2025-07-11", dueDate: "2025-07-20", icon: Heart },
-    { id: 3, title: "Coffee Meeting Split", amount: 45000, status: "Unpaid", group: "Dina, Sari", date: "2025-07-10", dueDate: "2025-07-14", icon: CreditCard },
-    { id: 4, title: "Lunch with Team", amount: 85000, status: "Unpaid", group: "Budi, Andi", date: "2025-07-09", dueDate: "2025-07-16", icon: DollarSign },
-    { id: 5, title: "Shopping Mall Trip", amount: 250000, status: "Unpaid", group: "Sari, Lina", date: "2025-07-08", dueDate: "2025-07-18", icon: Heart },
-    { id: 6, title: "Movie Night", amount: 90000, status: "Unpaid", group: "Rio, Maya", date: "2025-07-07", dueDate: "2025-07-17", icon: DollarSign },
-    { id: 7, title: "Gym Membership", amount: 150000, status: "Unpaid", group: "Andi, Budi", date: "2025-07-06", dueDate: "2025-07-19", icon: CreditCard },
-  ]);
+  // Dynamic data from localStorage
+  const [billsToPay, setBillsToPay] = createSignal<Bill[]>([]);
+  const [recentPayments, setRecentPayments] = createSignal<Payment[]>([]);
 
-  // Sample data for recent payments
-  const [recentPayments] = createSignal([
-    { id: 1, title: "Movie Night Split", amount: 75000, status: "Paid", group: "Lisa, Rio", date: "2025-07-08", icon: CheckCircle },
-    { id: 2, title: "Karaoke Session", amount: 120000, status: "Paid", group: "Maya, Dani", date: "2025-07-07", icon: CheckCircle },
-    { id: 3, title: "Restaurant Bill", amount: 180000, status: "Paid", group: "Sinta, Rina", date: "2025-07-06", icon: CheckCircle },
-    { id: 4, title: "Concert Tickets", amount: 350000, status: "Paid", group: "Bagus, Lina", date: "2025-07-05", icon: CheckCircle },
-    { id: 5, title: "Weekend Trip", amount: 500000, status: "Paid", group: "Dina, Sari", date: "2025-07-04", icon: CheckCircle },
-    { id: 6, title: "Birthday Party", amount: 200000, status: "Paid", group: "Rio, Maya", date: "2025-07-03", icon: CheckCircle },
-  ]);
+  // Load data from localStorage
+  const loadDataFromStorage = () => {
+    try {
+      // Load split bills and convert them to bills to pay (only show active bills)
+      const storedBills = localStorage.getItem('splitBills');
+      if (storedBills) {
+        const splitBills: SplitBill[] = JSON.parse(storedBills);
+        
+        // Convert split bills to bills format with per-person amount
+        // Only show bills that are not paid yet
+        const convertedBills: Bill[] = splitBills
+          .filter(bill => bill.status !== 'paid') // Only show unpaid bills
+          .map((bill, index) => {
+            const perPersonAmount = Math.round(bill.total / bill.participants);
+            
+            return {
+              id: index + 1,
+              title: bill.description,
+              amount: perPersonAmount, // This is now per-person amount
+              totalAmount: bill.total, // Store original total
+              status: bill.status || "pending",
+              group: `${bill.participants} people`,
+              date: bill.date,
+              dueDate: bill.date, // You can modify this to add days if needed
+              icon: DollarSign,
+              description: bill.description,
+              participants: bill.participants,
+              category: bill.category,
+              splitType: bill.splitType,
+              createdAt: bill.createdAt
+            };
+          });
+        
+        setBillsToPay(convertedBills);
+      }
+
+      // Load recent payments
+      const storedPayments = localStorage.getItem('recentPayments');
+      if (storedPayments) {
+        setRecentPayments(JSON.parse(storedPayments));
+      }
+    } catch (error) {
+      console.error('Error loading data from localStorage:', error);
+    }
+  };
+
+  // Helper function to create notification
+  const createNotification = (type: string, title: string, message: string, icon = 'info') => {
+    const notification = {
+      id: Date.now() + Math.random(),
+      type,
+      title,
+      message,
+      time: new Date().toLocaleString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        day: '2-digit',
+        month: 'short'
+      }),
+      read: false,
+      icon
+    };
+    
+    // Get existing notifications from localStorage
+    const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    
+    // Add new notification at the beginning
+    const updatedNotifications = [notification, ...existingNotifications];
+    
+    // Save to localStorage
+    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+    
+    return notification;
+  };
+
+  // Delete bill function
+  const deleteBill = (billIndex: number) => {
+    const bill = billsToPay()[billIndex];
+    const confirmMessage = `Are you sure you want to delete "${bill.title}"?\nYour share: Rp ${bill.amount.toLocaleString()}\nTotal bill: Rp ${bill.totalAmount.toLocaleString()}\nThis action cannot be undone.`;
+    
+    if (confirm(confirmMessage)) {
+      // Remove from bills to pay (update local state)
+      const updatedBills = billsToPay().filter((_, index) => index !== billIndex);
+      setBillsToPay(updatedBills);
+      
+      // Also remove from splitBills in localStorage completely
+      try {
+        const storedBills = localStorage.getItem('splitBills');
+        if (storedBills) {
+          const splitBills = JSON.parse(storedBills);
+          // Find the corresponding bill by matching description and amount
+          const billToDelete = bill;
+          const updatedSplitBills = splitBills.filter((splitBill: SplitBill) => 
+            !(splitBill.description === billToDelete.title && splitBill.total === billToDelete.totalAmount)
+          );
+          localStorage.setItem('splitBills', JSON.stringify(updatedSplitBills));
+        }
+        
+        // Add notification for deleted bill
+        createNotification(
+          'info',
+          'Bill Deleted',
+          `"${bill.title}" has been deleted successfully`,
+          'info'
+        );
+        
+        console.log('Bill deleted successfully');
+      } catch (error) {
+        console.error('Error saving updated bills to localStorage:', error);
+        alert('Error deleting bill. Please try again.');
+      }
+    }
+  };
 
   onMount(() => {
     const checkMobile = () => {
@@ -42,12 +180,32 @@ export default function PayBillPage() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
+    // Load data from localStorage
+    loadDataFromStorage();
+    
     // Animation delay
     setTimeout(() => setAnimate(true), 100);
     
+    // Reload data when page is focused (to detect changes from other pages)
+    const handleFocus = () => {
+      loadDataFromStorage();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
     return () => {
       window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('focus', handleFocus);
     };
+  });
+
+  // Reload data when component mounts or when localStorage changes
+  createEffect(() => {
+    const interval = setInterval(() => {
+      loadDataFromStorage();
+    }, 1000); // Check every second for changes
+
+    return () => clearInterval(interval);
   });
 
   const toggleSidebar = () => {
@@ -60,16 +218,118 @@ export default function PayBillPage() {
     }
   };
 
-  const handlePay = (id: number) => {
-    if (confirm("Are you sure you want to pay this bill?")) {
-      alert(`Processing payment for bill ID: ${id}`);
-      // Logic untuk update status pembayaran bisa dimasukkan di sini
+  // FIXED: Updated handlePay function to mark bill as paid instead of deleting
+  const handlePay = (billId: number) => {
+    const currentBills = billsToPay();
+    const billIndex = currentBills.findIndex(b => b.id === billId);
+    const bill = currentBills[billIndex];
+    
+    if (!bill) {
+      console.error('Bill not found!');
+      return;
+    }
+
+    if (confirm(`Are you sure you want to pay your share of "${bill.title}"?\nYour share: Rp ${bill.amount.toLocaleString()}\nTotal bill: Rp ${bill.totalAmount.toLocaleString()}`)) {
+      try {
+        // Create payment record with per-person amount
+        const payment: Payment = {
+          id: Date.now(),
+          title: bill.title,
+          amount: bill.amount, // Per-person amount
+          totalAmount: bill.totalAmount, // Original total
+          status: "paid",
+          group: bill.group,
+          date: new Date().toISOString().split('T')[0],
+          icon: CheckCircle
+        };
+
+        // Update recent payments (add to beginning)
+        const currentPayments = recentPayments();
+        const updatedPayments = [payment, ...currentPayments];
+        setRecentPayments(updatedPayments);
+        localStorage.setItem('recentPayments', JSON.stringify(updatedPayments));
+
+        // Remove from bills to pay (update local state immediately)
+        const updatedBills = currentBills.filter(b => b.id !== billId);
+        setBillsToPay(updatedBills);
+
+        // FIXED: Update splitBills in localStorage to mark as paid instead of deleting
+        const storedBills = localStorage.getItem('splitBills');
+        if (storedBills) {
+          const splitBills: SplitBill[] = JSON.parse(storedBills);
+          
+          // Find the corresponding bill by matching description and total amount
+          const updatedSplitBills = splitBills.map((splitBill: SplitBill) => {
+            if (splitBill.description === bill.title && splitBill.total === bill.totalAmount) {
+              return {
+                ...splitBill,
+                status: 'paid' as const,
+                paidDate: new Date().toISOString().split('T')[0],
+                paidAmount: bill.totalAmount // Mark full bill as paid
+              };
+            }
+            return splitBill;
+          });
+          
+          localStorage.setItem('splitBills', JSON.stringify(updatedSplitBills));
+        }
+
+        // Create notification for payment
+        createNotification(
+          'payment',
+          'Payment Completed',
+          `Successfully paid your share of "${bill.title}" for Rp ${bill.amount.toLocaleString()}`,
+          'check'
+        );
+
+        // Success message
+        alert(`Payment processed successfully!\nPaid: Rp ${bill.amount.toLocaleString()} (your share)\nBill: ${bill.title}`);
+        
+        console.log('Payment completed successfully:', {
+          billPaid: bill.title,
+          yourShare: bill.amount,
+          totalBill: bill.totalAmount,
+          totalBillsRemaining: updatedBills.length,
+          totalUnpaidAmount: updatedBills.reduce((sum, b) => sum + b.amount, 0)
+        });
+
+      } catch (error) {
+        console.error('Error processing payment:', error);
+        alert('Error processing payment. Please try again.');
+      }
     }
   };
 
+  // Calculate totals (these will automatically update when billsToPay changes)
   const totalUnpaid = () => billsToPay().reduce((sum, bill) => sum + bill.amount, 0);
   const totalPaid = () => recentPayments().reduce((sum, payment) => sum + payment.amount, 0);
   const totalBills = () => billsToPay().length;
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getCategoryIcon = (category?: string) => {
+    switch (category) {
+      case 'food': return DollarSign;
+      case 'transport': return CreditCard;
+      case 'entertainment': return Heart;
+      case 'shopping': return Wallet;
+      case 'utilities': return Receipt;
+      default: return DollarSign;
+    }
+  };
+
+  const getCategoryColor = (category?: string) => {
+    switch (category) {
+      case 'food': return 'from-orange-400/20 to-orange-500/20 text-orange-400';
+      case 'transport': return 'from-blue-400/20 to-blue-500/20 text-blue-400';
+      case 'entertainment': return 'from-purple-400/20 to-purple-500/20 text-purple-400';
+      case 'shopping': return 'from-green-400/20 to-green-500/20 text-green-400';
+      case 'utilities': return 'from-yellow-400/20 to-yellow-500/20 text-yellow-400';
+      default: return 'from-pink-200/10 to-pink-200/20 text-pink-200';
+    }
+  };
 
   return (
     <div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex relative overflow-hidden">
@@ -236,48 +496,49 @@ export default function PayBillPage() {
               </div>
             )}
           </div>
-         {/* Account */}
-         <div class="relative group">
-           <button 
-             onClick={() => navigate("/account")} 
-             class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-               !isSidebarOpen() ? 'justify-center' : ''
-             }`}
-           >
-             <User class="w-5 h-5 flex-shrink-0" />
-             <span class={`font-medium transition-all duration-300 overflow-hidden ${
-               isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-             }`}>Account</span>
-           </button>
-           {!isSidebarOpen() && !isMobile() && (
-             <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-               Account
-               <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-             </div>
-           )}
-         </div>
-         {/* Account Settings - Submenu */}
-         <div class="relative group ml-4">
-           <button 
-             onClick={() => navigate("/accountsettings")} 
-             class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
-               !isSidebarOpen() ? 'justify-center' : ''
-             }`}
-           >
-             <Settings class="w-4 h-4 flex-shrink-0" />
-             <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
-               isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-             }`}>Account Settings</span>
-           </button>
-           {!isSidebarOpen() && !isMobile() && (
-             <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-               Account Settings
-               <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-             </div>
-           )}
-         </div>
-        </nav>
 
+          {/* Account */}
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/account")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <User class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Account Settings - Submenu */}
+          <div class="relative group ml-4">
+            <button 
+              onClick={() => navigate("/accountsettings")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <Settings class="w-4 h-4 flex-shrink-0" />
+              <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account Settings</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account Settings
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+        </nav>
 
         {/* Logout Button */}
         <div class="p-6 border-t border-gray-700/50">
@@ -329,7 +590,7 @@ export default function PayBillPage() {
               <h1 class={`text-3xl lg:text-4xl font-black bg-gradient-to-r from-white to-pink-200 bg-clip-text text-transparent transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
                 Pay Your Bills
               </h1>
-              <p class="text-gray-400 mt-1">Review and complete your payments</p>
+              <p class="text-gray-400 mt-1">Review and complete your share of payments</p>
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -361,7 +622,7 @@ export default function PayBillPage() {
               </div>
             </div>
             <h3 class="text-2xl font-bold text-white">Rp {totalUnpaid().toLocaleString()}</h3>
-            <p class="text-gray-400 text-sm">Total Unpaid</p>
+            <p class="text-gray-400 text-sm">Your Share to Pay</p>
           </div>
 
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-700 hover:scale-105 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 400ms">
@@ -375,7 +636,7 @@ export default function PayBillPage() {
               </div>
             </div>
             <h3 class="text-2xl font-bold text-white">Rp {totalPaid().toLocaleString()}</h3>
-            <p class="text-gray-400 text-sm">Recently Paid</p>
+            <p class="text-gray-400 text-sm">Your Paid Shares</p>
           </div>
 
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-700 hover:scale-105 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 600ms">
@@ -388,102 +649,199 @@ export default function PayBillPage() {
                 <span class="text-purple-400 text-sm font-medium">Due soon</span>
               </div>
             </div>
-            <h3 class="text-2xl font-bold text-white">{billsToPay().filter(bill => new Date(bill.dueDate) <= new Date(Date.now() + 3*24*60*60*1000)).length}</h3>
+            <h3 class="text-2xl font-bold text-white">{billsToPay().filter(bill => {
+              const dueDate = new Date(bill.dueDate);
+              const today = new Date();
+              const diffTime = dueDate.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              return diffDays <= 7 && diffDays >= 0;
+            }).length}</h3>
             <p class="text-gray-400 text-sm">Bills Due Soon</p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Bills to Pay - With Scrollable Content */}
-          <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 flex flex-col ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 800ms">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="p-2 bg-red-500/20 rounded-xl">
-                <AlertCircle class="w-5 h-5 text-red-400" />
+          {/* Bills to Pay - Dynamic from localStorage with per-person amounts */}
+          <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 flex flex-col overflow-hidden ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 800ms">
+            <div class="flex items-center justify-between p-6 border-b border-gray-700/50 bg-gray-900/40">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-red-500/20 rounded-xl">
+                  <AlertCircle class="w-5 h-5 text-red-400" />
+                </div>
+                <h2 class="text-xl font-bold text-white">Your Bills to Pay</h2>
               </div>
-              <h2 class="text-xl font-bold text-white">Bills to Pay</h2>
-              <div class="ml-auto bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm font-medium">
-                {billsToPay().length} pending
+              <div class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm font-medium">
+                {totalBills()} pending
               </div>
             </div>
             
-            {/* Scrollable container */}
-            <div class="flex-1 overflow-hidden">
-              <div class="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50">
-                <For each={billsToPay()}>
-                  {(bill) => (
-                    <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-                      <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-3">
-                          <div class="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
-                            <bill.icon class="w-5 h-5 text-red-400" />
-                          </div>
-                          <div>
-                            <p class="font-semibold text-white">{bill.title}</p>
-                            <p class="text-gray-400 text-sm">Group: {bill.group}</p>
-                            <div class="flex items-center gap-2 text-gray-400 text-sm">
-                              <Calendar class="w-4 h-4" />
-                              <span>Due: {bill.dueDate}</span>
+            {billsToPay().length > 0 ? (
+              <div class="flex-1 relative">
+                <div class="h-96 overflow-hidden relative">
+                  <div class="h-full overflow-y-auto scrollbar-none hover:scrollbar-thin scrollbar-thumb-pink-200/30 scrollbar-track-transparent px-6 py-4">
+                    <div class="space-y-3">
+                      <For each={billsToPay()}>
+                        {(bill: Bill, index) => {
+                          const IconComponent = getCategoryIcon(bill.category);
+                          return (
+                            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-800/20 to-gray-800/40 rounded-xl border border-gray-700/20 hover:from-gray-800/40 hover:to-gray-800/60 hover:border-pink-200/20 transition-all duration-300 group backdrop-blur-sm">
+                              <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div class={`w-10 h-10 bg-gradient-to-br ${getCategoryColor(bill.category)} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
+                                  <IconComponent class="w-5 h-5" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                  <p class="font-medium text-white group-hover:text-pink-100 transition-colors duration-300 truncate">{bill.title}</p>
+                                  <p class="text-sm text-gray-400">{bill.date} • {bill.group}</p>
+                                  {bill.category && (
+                                    <p class="text-xs text-gray-500 capitalize">{bill.category}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="text-right">
+                                  <p class="font-bold text-pink-200">Rp {bill.amount.toLocaleString()}</p>
+                                  <p class="text-xs text-gray-500">Your share</p>
+                                  <p class="text-xs text-gray-600">Total: Rp {bill.totalAmount.toLocaleString()}</p>
+                                </div>
+                                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                  <button
+                                    onClick={(e: Event) => {
+                                      e.stopPropagation();
+                                      handlePay(bill.id);
+                                    }}
+                                    class="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-lg transition-all duration-200 border border-emerald-500/20 hover:border-emerald-500/40 text-sm font-medium"
+                                  >
+                                    Pay
+                                  </button>
+                                  <button
+                                    onClick={(e: Event) => {
+                                      e.stopPropagation();
+                                      deleteBill(index());
+                                    }}
+                                    class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-all duration-200 border border-red-500/20 hover:border-red-500/40"
+                                    title="Delete bill"
+                                  >
+                                    <Trash2 class="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                        <div class="text-right">
-                          <p class="text-red-300 font-bold">Rp {bill.amount.toLocaleString()}</p>
-                          <p class="text-red-400 text-sm">{bill.status}</p>
-                        </div>
-                      </div>
-                      <button
-                        class="w-full bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-4 py-2 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
-                        onClick={() => handlePay(bill.id)}
-                      >
-                        Pay Now
-                      </button>
+                          );
+                        }}
+                      </For>
                     </div>
-                  )}
-                </For>
+                  </div>
+                  
+                  {/* Gradient fade at bottom for scroll indication */}
+                  <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-900/60 to-transparent pointer-events-none" />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div class="flex-1 flex flex-col items-center justify-center text-center p-6">
+                <div class="w-20 h-20 bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
+                  <FileText class="w-10 h-10 text-gray-500" />
+                </div>
+                <h3 class="text-lg font-semibold text-gray-300 mb-2">No Bills to Pay</h3>
+                <p class="text-gray-500 text-sm mb-6 max-w-xs">
+                  You don't have any outstanding bills at the moment. Create a new split bill to get started.
+                </p>
+                <button
+                  class="bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-6 py-3 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
+                  onClick={() => navigate("/addsplitbill")}
+                >
+                  + Create Split Bill
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Recent Payments - With Scrollable Content */}
-          <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 flex flex-col ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="p-2 bg-emerald-500/20 rounded-xl">
-                <CheckCircle class="w-5 h-5 text-emerald-400" />
+          {/* Recent Payments - Dynamic from localStorage with per-person amounts */}
+          <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 flex flex-col overflow-hidden ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
+            <div class="flex items-center justify-between p-6 border-b border-gray-700/50 bg-gray-900/40">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-500/20 rounded-xl">
+                  <CheckCircle class="w-5 h-5 text-emerald-400" />
+                </div>
+                <h2 class="text-xl font-bold text-white">Your Recent Payments</h2>
               </div>
-              <h2 class="text-xl font-bold text-white">Recent Payments</h2>
-              <div class="ml-auto bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium">
+              <div class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium">
                 {recentPayments().length} completed
               </div>
             </div>
             
-            {/* Scrollable container */}
-            <div class="flex-1 overflow-hidden">
-              <div class="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50">
-                <For each={recentPayments()}>
-                  {(payment) => (
-                    <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-105">
-                      <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-3">
-                          <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                            <payment.icon class="w-5 h-5 text-emerald-400" />
-                          </div>
-                          <div>
-                            <p class="font-semibold text-white">{payment.title}</p>
-                            <p class="text-gray-400 text-sm">Group: {payment.group}</p>
-                            <div class="flex items-center gap-2 text-gray-400 text-sm">
-                              <Calendar class="w-4 h-4" />
-                              <span>Paid: {payment.date}</span>
+            {recentPayments().length > 0 ? (
+              <div class="flex-1 relative">
+                <div class="h-96 overflow-hidden relative">
+                  <div class="h-full overflow-y-auto scrollbar-none hover:scrollbar-thin scrollbar-thumb-pink-200/30 scrollbar-track-transparent px-6 py-4">
+                    <div class="space-y-3">
+                      <For each={recentPayments()}>
+                        {(payment: Payment) => (
+                          <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-800/20 to-gray-800/40 rounded-xl border border-gray-700/20 hover:from-gray-800/40 hover:to-gray-800/60 hover:border-emerald-400/20 transition-all duration-300 group backdrop-blur-sm">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                              <div class="w-10 h-10 bg-gradient-to-br from-emerald-500/10 to-emerald-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                                <CheckCircle class="w-5 h-5 text-emerald-400" />
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                <p class="font-medium text-white group-hover:text-emerald-100 transition-colors duration-300 truncate">{payment.title}</p>
+                                <p class="text-sm text-gray-400">{payment.date} • {payment.group}</p>
+                              </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                              <div class="text-right">
+                                <p class="font-bold text-emerald-400">Rp {payment.amount.toLocaleString()}</p>
+                                <p class="text-xs text-emerald-500/70">Paid (your share)</p>
+                                <p class="text-xs text-gray-600">Total: Rp {payment.totalAmount.toLocaleString()}</p>
+                              </div>
+                              <div class="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                                <CheckCircle class="w-4 h-4 text-emerald-400" />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div class="text-right">
-                          <p class="text-emerald-300 font-bold">Rp {payment.amount.toLocaleString()}</p>
-                          <p class="text-emerald-400 text-sm">{payment.status}</p>
-                        </div>
-                      </div>
+                        )}
+                      </For>
                     </div>
-                  )}
-                </For>
+                  </div>
+                  
+                  {/* Gradient fade at bottom for scroll indication */}
+                  <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-900/60 to-transparent pointer-events-none" />
+                </div>
+              </div>
+            ) : (
+              <div class="flex-1 flex flex-col items-center justify-center text-center p-6">
+                <div class="w-20 h-20 bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
+                  <Receipt class="w-10 h-10 text-gray-500" />
+                </div>
+                <h3 class="text-lg font-semibold text-gray-300 mb-2">No Recent Payments</h3>
+                <p class="text-gray-500 text-sm mb-6 max-w-xs">
+                  Your payment history will appear here once you start making payments.
+                </p>
+                <button
+                  class="bg-gray-700/50 text-gray-400 px-6 py-3 rounded-xl font-medium cursor-not-allowed"
+                  disabled
+                >
+                  No Payments Yet
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Help Section */}
+        <div class={`bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/30 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1200ms">
+          <div class="flex items-start gap-3">
+            <div class="p-2 bg-blue-500/20 rounded-xl flex-shrink-0">
+              <CreditCard class="w-5 h-5 text-blue-400" />
+            </div>
+            <div>
+              <h4 class="text-lg font-semibold text-white mb-2">Payment Instructions</h4>
+              <div class="space-y-2 text-gray-300">
+                <p>• Bills show your individual share from split expenses, not the total amount</p>
+                <p>• Click "Pay" to mark your share as paid - the bill will remain in Dashboard with "Paid" status</p>
+                <p>• Total bill amount is shown for reference under "Your share"</p>
+                <p>• You can delete bills using the trash icon if they're no longer needed</p>
+                <p>• Payment history tracks your individual share payments</p>
+                <p>• All actions will create notifications to keep you informed</p>
+                <p>• Paid bills will appear in Dashboard's Recent Activities with green "Paid" status</p>
               </div>
             </div>
           </div>

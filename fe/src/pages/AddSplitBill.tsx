@@ -27,6 +27,40 @@ export default function AddSplitBillPage() {
     { value: "other", label: "Other", icon: Plus },
   ];
 
+  // Define Friend interface
+  interface Friend {
+    id: number;
+    name: string;
+    email?: string;
+    phone?: string;
+    amount: number;
+    selected: boolean;
+    avatar?: string;
+  }
+
+  // Load friends from localStorage
+  const loadFriendsFromStorage = () => {
+    try {
+      const storedFriends = localStorage.getItem('split_bills_friends');
+      if (storedFriends) {
+        const parsedFriends = JSON.parse(storedFriends);
+        // Convert stored friends to the format needed for this component
+        const convertedFriends = parsedFriends.map((friend: any, index: number) => ({
+          id: index + 1,
+          name: friend.name,
+          email: friend.email,
+          phone: friend.phone,
+          amount: 0,
+          selected: false,
+          avatar: friend.avatar
+        }));
+        setFriends(convertedFriends);
+      }
+    } catch (error) {
+      console.error('Error loading friends from localStorage:', error);
+    }
+  };
+
   onMount(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -37,6 +71,9 @@ export default function AddSplitBillPage() {
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    // Load friends from localStorage
+    loadFriendsFromStorage();
     
     // Animation delay
     setTimeout(() => setAnimate(true), 100);
@@ -56,14 +93,6 @@ export default function AddSplitBillPage() {
     }
   };
 
-  // Define Friend interface
-  interface Friend {
-    id: number;
-    name: string;
-    amount: number;
-    selected: boolean;
-  }
-
   const toggleFriend = (id: number) => {
     setFriends(friends().map((friend: Friend) => 
       friend.id === id ? { ...friend, selected: !friend.selected } : friend
@@ -73,12 +102,37 @@ export default function AddSplitBillPage() {
   const addFriend = () => {
     if (newFriendName().trim()) {
       const newId = friends().length > 0 ? Math.max(...friends().map((f: Friend) => f.id)) + 1 : 1;
-      setFriends([...friends(), { 
+      const newFriend = { 
         id: newId, 
         name: newFriendName().trim(), 
         amount: 0, 
         selected: false 
-      }]);
+      };
+      
+      // Add to current friends list
+      setFriends([...friends(), newFriend]);
+      
+      // Also save to localStorage for persistence
+      try {
+        const storedFriends = localStorage.getItem('split_bills_friends');
+        const existingFriends = storedFriends ? JSON.parse(storedFriends) : [];
+        
+        const friendToSave = {
+          id: `friend_${Date.now()}`,
+          name: newFriendName().trim(),
+          email: "",
+          phone: "",
+          balance: 0,
+          status: "settled",
+          addedDate: new Date().toISOString()
+        };
+        
+        const updatedFriends = [...existingFriends, friendToSave];
+        localStorage.setItem('split_bills_friends', JSON.stringify(updatedFriends));
+      } catch (error) {
+        console.error('Error saving friend to localStorage:', error);
+      }
+      
       setNewFriendName("");
     }
   };
@@ -164,38 +218,45 @@ export default function AddSplitBillPage() {
     const updatedBills = [newBill, ...existingBills];
     localStorage.setItem('splitBills', JSON.stringify(updatedBills));
 
-    // Update or add friends with their bill amounts
-    const existingFriends = JSON.parse(localStorage.getItem('friends') || '[]');
-    let updatedFriends = [...existingFriends];
+    // Update friends with their bill amounts in the friends storage
+    try {
+      const existingFriends = JSON.parse(localStorage.getItem('split_bills_friends') || '[]');
+      let updatedFriends = [...existingFriends];
 
-    selectedFriends().forEach(selectedFriend => {
-      const existingFriendIndex = updatedFriends.findIndex(f => f.name === selectedFriend.name);
-      
-      const friendAmount = splitType() === 'equal' 
-        ? totalAmount() / (selectedFriends().length + 1)
-        : selectedFriend.amount;
+      selectedFriends().forEach(selectedFriend => {
+        const existingFriendIndex = updatedFriends.findIndex(f => f.name === selectedFriend.name);
+        
+        const friendAmount = splitType() === 'equal' 
+          ? totalAmount() / (selectedFriends().length + 1)
+          : selectedFriend.amount;
 
-      if (existingFriendIndex >= 0) {
-        // Update existing friend
-        updatedFriends[existingFriendIndex] = {
-          ...updatedFriends[existingFriendIndex],
-          amount: updatedFriends[existingFriendIndex].amount + friendAmount,
-          status: "Waiting" // Reset status to waiting for new bill
-        };
-      } else {
-        // Add new friend
-        const newFriend = {
-          name: selectedFriend.name,
-          status: "Waiting",
-          avatar: selectedFriend.name[0].toUpperCase(),
-          amount: friendAmount
-        };
-        updatedFriends.push(newFriend);
-      }
-    });
+        if (existingFriendIndex >= 0) {
+          // Update existing friend
+          updatedFriends[existingFriendIndex] = {
+            ...updatedFriends[existingFriendIndex],
+            balance: updatedFriends[existingFriendIndex].balance + friendAmount,
+            status: "owes_you" // Update status since they now owe money
+          };
+        } else {
+          // This shouldn't happen since we're loading from the same storage, but just in case
+          const newFriend = {
+            id: `friend_${Date.now()}_${selectedFriend.id}`,
+            name: selectedFriend.name,
+            email: selectedFriend.email || "",
+            phone: selectedFriend.phone || "",
+            balance: friendAmount,
+            status: "owes_you",
+            addedDate: new Date().toISOString()
+          };
+          updatedFriends.push(newFriend);
+        }
+      });
 
-    // Save updated friends to localStorage
-    localStorage.setItem('friends', JSON.stringify(updatedFriends));
+      // Save updated friends to localStorage
+      localStorage.setItem('split_bills_friends', JSON.stringify(updatedFriends));
+    } catch (error) {
+      console.error('Error updating friends with bill amounts:', error);
+    }
 
     // Create notifications
     // Main notification for new bill
@@ -228,11 +289,15 @@ export default function AddSplitBillPage() {
     setBillDate(new Date().toISOString().split('T')[0]);
     setBillCategory("food");
     setBillDescription("");
-    setFriends([]);
+    setFriends(friends().map(f => ({ ...f, selected: false, amount: 0 })));
     setSplitType("equal");
     
     // Navigate to dashboard to see updated data
     navigate("/dashboard");
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   return (
@@ -635,7 +700,7 @@ export default function AddSplitBillPage() {
                   type="text"
                   value={newFriendName()}
                   onInput={(e) => setNewFriendName((e.target as HTMLInputElement).value)}
-                  placeholder="Friend's name"
+                  placeholder="Add new friend"
                   class="flex-1 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-pink-200/50 focus:ring-1 focus:ring-pink-200/20 transition-all duration-300"
                   onKeyDown={(e) => e.key === 'Enter' && addFriend()}
                 />
@@ -646,6 +711,9 @@ export default function AddSplitBillPage() {
                   <UserPlus class="w-4 h-4" />
                 </button>
               </div>
+              <p class="text-gray-500 text-xs mt-1">
+                Your saved friends will appear below automatically
+              </p>
             </div>
 
             {/* Friends List */}
@@ -655,8 +723,14 @@ export default function AddSplitBillPage() {
                   <div class="w-16 h-16 bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users class="w-8 h-8 text-gray-500" />
                   </div>
-                  <p class="text-gray-400 mb-2">No friends added yet</p>
-                  <p class="text-gray-500 text-sm">Add friends above to split the bill with them</p>
+                  <p class="text-gray-400 mb-2">No friends available</p>
+                  <p class="text-gray-500 text-sm">Add friends from the Friends page or add a new friend above</p>
+                  <button
+                    onClick={() => navigate("/friends")}
+                    class="mt-3 text-pink-200 hover:text-pink-100 text-sm underline"
+                  >
+                    Go to Friends page
+                  </button>
                 </div>
               ) : (
                 <For each={friends()}>
@@ -675,10 +749,21 @@ export default function AddSplitBillPage() {
                             class="w-4 h-4 text-emerald-400 bg-gray-800/50 border-gray-700/50 rounded focus:ring-emerald-400/20"
                           />
                           <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center">
-                              <span class="text-white font-bold text-sm">{friend.name[0]}</span>
+                            <div class={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
+                              friend.avatar ? 'bg-cover bg-center' : 'bg-gradient-to-br from-emerald-400 to-emerald-500'
+                            }`}>
+                              {friend.avatar ? (
+                                <img src={friend.avatar} alt={friend.name} class="w-full h-full rounded-full object-cover" />
+                              ) : (
+                                getInitials(friend.name)
+                              )}
                             </div>
-                            <span class="text-white font-medium">{friend.name}</span>
+                            <div>
+                              <span class="text-white font-medium">{friend.name}</span>
+                              {friend.email && (
+                                <p class="text-gray-400 text-xs">{friend.email}</p>
+                              )}
+                            </div>
                           </div>
                         </label>
                         <button
@@ -778,11 +863,11 @@ export default function AddSplitBillPage() {
               <h4 class="text-lg font-semibold text-white mb-2">How it works</h4>
               <div class="space-y-2 text-gray-300">
                 <p>• Enter the bill details including title, amount, and category</p>
-                <p>• Add friends you want to split the bill with</p>
+                <p>• Your saved friends will automatically appear in the "Split With" section</p>
                 <p>• Select which friends to include in the split</p>
                 <p>• Choose between equal split or custom amounts</p>
                 <p>• Review the summary and create your split bill</p>
-                <p>• Friends will be notified and can settle their share</p>
+                <p>• Friends will be notified and their balances will be updated</p>
               </div>
             </div>
           </div>
