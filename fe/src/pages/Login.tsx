@@ -234,12 +234,12 @@ export default function LoginPage() {
   });
 
   return (
-    <div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 relative overflow-hidden">
-      {/* Background animation */}
+    <div class="min-h-screen bg-black relative overflow-hidden">
+      {/* Background animation dengan warna merah */}
       <div class="absolute inset-0 overflow-hidden">
-        <div class="absolute -top-4 -right-4 w-72 h-72 bg-pink-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div class="absolute -bottom-8 -left-8 w-96 h-96 bg-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-pink-300/15 rounded-full blur-2xl animate-pulse delay-500"></div>
+        <div class="absolute -top-4 -right-4 w-72 h-72 bg-red-800/20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute -bottom-8 -left-8 w-96 h-96 bg-red-900/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-red-800/15 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
       {/* Floating elements */}
@@ -247,7 +247,7 @@ export default function LoginPage() {
         <Heart class="w-6 h-6 text-white/30" />
       </div>
       <div class="absolute top-32 right-20 animate-bounce delay-700">
-        <Sparkles class="w-4 h-4 text-pink-300/60" />
+        <Sparkles class="w-4 h-4 text-red-700/60" />
       </div>
       <div class="absolute bottom-32 left-20 animate-bounce delay-1000">
         <div class="w-3 h-3 bg-white/30 rounded-full"></div>
@@ -264,11 +264,11 @@ export default function LoginPage() {
             <span class="text-sm font-medium">Back to Home</span>
           </button>
 
-          <div class="bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-pink-300/30 hover:bg-gray-800/25 transition-all duration-500">
+          <div class="bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-red-700/30 hover:bg-gray-800/25 transition-all duration-500">
             {/* Avatar */}
             <div class="relative mb-6">
-              <div class="absolute inset-0 bg-pink-300/30 rounded-full blur-xl animate-pulse"></div>
-              <div class="relative w-32 h-32 mx-auto rounded-full border-4 border-pink-300/50 overflow-hidden bg-gradient-to-br from-pink-300 to-pink-400 shadow-2xl flex items-center justify-center">
+              <div class="absolute inset-0 bg-red-800/30 rounded-full blur-xl animate-pulse"></div>
+              <div class="relative w-32 h-32 mx-auto rounded-full border-4 border-red-700/50 overflow-hidden bg-gradient-to-br from-red-800 to-red-900 shadow-2xl flex items-center justify-center">
                 <User class="w-16 h-16 text-white/90" />
               </div>
             </div>
@@ -276,7 +276,7 @@ export default function LoginPage() {
             {/* Title */}
             <div class="text-center mb-8">
               <h2 class="text-3xl font-black text-white mb-2">Welcome Back!</h2>
-              <p class="text-pink-100 text-sm">Sign in to continue your journey</p>
+              <p class="text-red-100 text-sm">Sign in to continue your journey</p>
             </div>
 
             {/* Success Message for Password Creation */}
@@ -308,9 +308,9 @@ export default function LoginPage() {
 
             {/* Username */}
             <div class="relative mb-4 group">
-              <div class="absolute inset-0 bg-pink-300/20 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-pink-300/30 transition-all duration-300"></div>
-              <div class="relative flex items-center bg-gray-900/20 backdrop-blur-sm rounded-2xl px-4 py-4 border border-pink-300/30 group-focus-within:border-pink-300/60 transition-all duration-300">
-                <User class="text-pink-300 w-5 h-5 mr-3" />
+              <div class="absolute inset-0 bg-red-800/20 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-red-800/30 transition-all duration-300"></div>
+              <div class="relative flex items-center bg-gray-900/20 backdrop-blur-sm rounded-2xl px-4 py-4 border border-red-700/30 group-focus-within:border-red-700/60 transition-all duration-300">
+                <User class="text-red-700 w-5 h-5 mr-3" />
                 <input
                   type="text"
                   placeholder="Username or Email"
@@ -328,9 +328,9 @@ export default function LoginPage() {
 
             {/* Password */}
             <div class="relative mb-6 group">
-              <div class="absolute inset-0 bg-pink-300/20 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-pink-300/30 transition-all duration-300"></div>
-              <div class="relative flex items-center bg-gray-900/20 backdrop-blur-sm rounded-2xl px-4 py-4 border border-pink-300/30 group-focus-within:border-pink-300/60 transition-all duration-300">
-                <Lock class="text-pink-300 w-5 h-5 mr-3" />
+              <div class="absolute inset-0 bg-red-800/20 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-red-800/30 transition-all duration-300"></div>
+              <div class="relative flex items-center bg-gray-900/20 backdrop-blur-sm rounded-2xl px-4 py-4 border border-red-700/30 group-focus-within:border-red-700/60 transition-all duration-300">
+                <Lock class="text-red-700 w-5 h-5 mr-3" />
                 <input
                   type={showPassword() ? "text" : "password"}
                   placeholder="Password"
@@ -351,7 +351,7 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
-                  class="text-pink-300 hover:text-white ml-2 transition-colors duration-300"
+                  class="text-red-700 hover:text-white ml-2 transition-colors duration-300"
                   onClick={() => setShowPassword(!showPassword())}
                 >
                   {showPassword() ? <EyeOff class="w-4 h-4" /> : <Eye class="w-4 h-4" />}
@@ -360,7 +360,7 @@ export default function LoginPage() {
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div class="flex items-center justify-between text-sm text-pink-100 mb-8">
+            <div class="flex items-center justify-between text-sm text-red-100 mb-8">
               <label class="flex items-center gap-2 cursor-pointer group">
                 <input
                   type="checkbox"
@@ -368,10 +368,10 @@ export default function LoginPage() {
                   onInput={(e) => setRememberMe(e.currentTarget.checked)}
                   class="sr-only"
                 />
-                <div class={`w-5 h-5 rounded-md border-2 border-pink-300/50 transition-all duration-300 ${rememberMe() ? 'bg-white border-white' : 'bg-gray-900/20'}`}>
+                <div class={`w-5 h-5 rounded-md border-2 border-red-700/50 transition-all duration-300 ${rememberMe() ? 'bg-white border-white' : 'bg-gray-900/20'}`}>
                   {rememberMe() && (
                     <div class="w-full h-full flex items-center justify-center">
-                      <div class="w-2 h-2 bg-pink-400 rounded-sm"></div>
+                      <div class="w-2 h-2 bg-red-800 rounded-sm"></div>
                     </div>
                   )}
                 </div>
@@ -379,7 +379,7 @@ export default function LoginPage() {
               </label>
               <button 
                 onClick={() => navigate("/forgotpassword")}
-                class="text-pink-300 hover:text-white transition-colors duration-300 text-sm"
+                class="text-red-700 hover:text-white transition-colors duration-300 text-sm"
               >
                 Forgot Password?
               </button>
@@ -387,15 +387,15 @@ export default function LoginPage() {
 
             {/* Login Button */}
             <button
-              class="group relative w-full bg-white text-pink-600 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+              class="group relative w-full bg-white text-red-800 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleLogin}
               disabled={isLoading()}
             >
-              <div class="absolute inset-0 bg-gradient-to-r from-pink-400 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-red-800 to-red-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <span class="relative z-10 group-hover:text-white transition-colors duration-300 flex items-center justify-center gap-2">
                 {isLoading() ? (
                   <>
-                    <div class="w-5 h-5 border-2 border-pink-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div class="w-5 h-5 border-2 border-red-800 border-t-transparent rounded-full animate-spin"></div>
                     Signing in...
                   </>
                 ) : (
@@ -409,7 +409,7 @@ export default function LoginPage() {
 
             {/* Create Account */}
             <div class="text-center mt-6">
-              <p class="text-pink-100 text-sm">
+              <p class="text-red-100 text-sm">
                 Don't have an account?{" "}
                 <button
                   onClick={() => navigate("/register")}
@@ -424,16 +424,16 @@ export default function LoginPage() {
           {/* Social login */}
           <div class="mt-8 text-center">
             <div class="flex items-center gap-4 mb-4">
-              <div class="flex-1 h-px bg-pink-300/30"></div>
-              <span class="text-pink-200 text-sm">Or continue with</span>
-              <div class="flex-1 h-px bg-pink-300/30"></div>
+              <div class="flex-1 h-px bg-red-700/30"></div>
+              <span class="text-red-200 text-sm">Or continue with</span>
+              <div class="flex-1 h-px bg-red-700/30"></div>
             </div>
 
             <div class="flex gap-4 justify-center">
               {["G", "F", "A"].map((text) => (
-                <button class="bg-gray-900/20 backdrop-blur-sm rounded-xl p-3 border border-pink-300/30 hover:bg-gray-800/30 transition-all duration-300 hover:scale-105">
+                <button class="bg-gray-900/20 backdrop-blur-sm rounded-xl p-3 border border-red-700/30 hover:bg-gray-800/30 transition-all duration-300 hover:scale-105">
                   <div class="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                    <span class="text-pink-600 font-bold text-sm">{text}</span>
+                    <span class="text-red-800 font-bold text-sm">{text}</span>
                   </div>
                 </button>
               ))}
@@ -442,9 +442,9 @@ export default function LoginPage() {
 
           {/* Info untuk developer */}
           <div class="mt-6 text-center">
-            <div class="bg-gray-900/40 backdrop-blur-sm rounded-xl p-4 border border-pink-300/20">
-              <p class="text-pink-200 text-xs mb-2">🔒 Security Enhanced</p>
-              <p class="text-pink-100/70 text-xs leading-relaxed">
+            <div class="bg-gray-900/40 backdrop-blur-sm rounded-xl p-4 border border-red-700/20">
+              <p class="text-red-200 text-xs mb-2">🔒 Security Enhanced</p>
+              <p class="text-red-100/70 text-xs leading-relaxed">
                 Previous passwords are automatically invalidated when new passwords are created for enhanced security.
               </p>
             </div>
