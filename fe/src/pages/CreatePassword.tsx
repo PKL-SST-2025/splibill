@@ -213,7 +213,7 @@ export default function CreatePasswordPage() {
   const getStrengthColor = () => {
     if (passwordStrength() <= 2) return "bg-red-500";
     if (passwordStrength() <= 3) return "bg-yellow-500";
-    if (passwordStrength() <= 4) return "bg-blue-500";
+    if (passwordStrength() <= 4) return "bg-pink-400";
     return "bg-green-500";
   };
 
@@ -227,28 +227,28 @@ export default function CreatePasswordPage() {
   const getStrengthTextColor = () => {
     if (passwordStrength() <= 2) return "text-red-400";
     if (passwordStrength() <= 3) return "text-yellow-400";
-    if (passwordStrength() <= 4) return "text-blue-400";
+    if (passwordStrength() <= 4) return "text-pink-400";
     return "text-green-400";
   };
 
   return (
     <div class="min-h-screen bg-black relative overflow-hidden">
-      {/* Background animation dengan warna merah */}
+      {/* Background animation dengan warna soft pink */}
       <div class="absolute inset-0 overflow-hidden">
-        <div class="absolute -top-4 -right-4 w-72 h-72 bg-red-800/20 rounded-full blur-3xl animate-pulse"></div>
-        <div class="absolute -bottom-8 -left-8 w-96 h-96 bg-red-900/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-red-800/15 rounded-full blur-2xl animate-pulse delay-500"></div>
+        <div class="absolute -top-4 -right-4 w-72 h-72 bg-pink-300/10 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute -bottom-8 -left-8 w-96 h-96 bg-pink-400/8 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-pink-300/12 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
       {/* Floating elements */}
       <div class="absolute top-20 left-10 animate-bounce delay-300">
-        <Heart class="w-6 h-6 text-white/30" />
+        <Heart class="w-6 h-6 text-pink-300/60" />
       </div>
       <div class="absolute top-32 right-20 animate-bounce delay-700">
-        <Sparkles class="w-4 h-4 text-red-700/60" />
+        <Sparkles class="w-4 h-4 text-pink-200/50" />
       </div>
       <div class="absolute bottom-32 left-20 animate-bounce delay-1000">
-        <div class="w-3 h-3 bg-white/30 rounded-full"></div>
+        <div class="w-3 h-3 bg-pink-300/40 rounded-full"></div>
       </div>
 
       <div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
@@ -256,19 +256,19 @@ export default function CreatePasswordPage() {
           {/* Back button */}
           <button
             onClick={handleBack}
-            class="group flex items-center gap-2 text-white/80 hover:text-white mb-8 transition-all duration-300 hover:scale-105"
+            class="group flex items-center gap-2 text-pink-200/80 hover:text-pink-100 mb-8 transition-all duration-300 hover:scale-105"
           >
             <ArrowLeft class="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
             <span class="text-sm font-medium">Back</span>
           </button>
 
-          <div class="bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-red-700/30 hover:bg-gray-800/25 transition-all duration-500">
+          <div class="bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-pink-400/20 hover:bg-gray-800/25 transition-all duration-500">
             {!isCreated() ? (
               <form onSubmit={handleSubmit}>
                 {/* Icon */}
                 <div class="relative mb-6">
-                  <div class="absolute inset-0 bg-red-800/30 rounded-full blur-xl animate-pulse"></div>
-                  <div class="relative w-24 h-24 mx-auto rounded-full border-4 border-red-700/50 overflow-hidden bg-gradient-to-br from-red-800 to-red-900 shadow-2xl flex items-center justify-center">
+                  <div class="absolute inset-0 bg-pink-400/20 rounded-full blur-xl animate-pulse"></div>
+                  <div class="relative w-24 h-24 mx-auto rounded-full border-4 border-pink-400/30 overflow-hidden bg-gradient-to-br from-pink-300 to-pink-400 shadow-2xl flex items-center justify-center">
                     <Lock class="w-12 h-12 text-white/90" />
                   </div>
                 </div>
@@ -276,11 +276,11 @@ export default function CreatePasswordPage() {
                 {/* Title */}
                 <div class="text-center mb-8">
                   <h2 class="text-3xl font-black text-white mb-2">Create New Password</h2>
-                  <p class="text-red-100 text-sm leading-relaxed mb-4">
+                  <p class="text-pink-100 text-sm leading-relaxed mb-4">
                     Create a secure password for your account
                   </p>
                   {getUserEmail() && (
-                    <p class="text-white font-semibold text-sm bg-gray-800/60 rounded-xl px-4 py-2 border border-red-700/30">
+                    <p class="text-white font-semibold text-sm bg-gray-800/60 rounded-xl px-4 py-2 border border-pink-400/20">
                       {getUserEmail()}
                     </p>
                   )}
@@ -288,22 +288,22 @@ export default function CreatePasswordPage() {
 
                 {/* Password Input */}
                 <div class="relative mb-4 group">
-                  <div class="absolute inset-0 bg-red-800/20 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-red-800/30 transition-all duration-300"></div>
+                  <div class="absolute inset-0 bg-pink-400/15 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-pink-400/20 transition-all duration-300"></div>
                   <div class={`relative flex items-center bg-gray-900/20 backdrop-blur-sm rounded-2xl px-4 py-4 border transition-all duration-300 ${
-                    errors().password ? 'border-red-400/60' : 'border-red-700/30 group-focus-within:border-red-700/60'
+                    errors().password ? 'border-red-400/60' : 'border-pink-400/30 group-focus-within:border-pink-400/60'
                   }`}>
-                    <Lock class="w-5 h-5 text-red-700 mr-3" />
+                    <Lock class="w-5 h-5 text-pink-400 mr-3" />
                     <input
                       type={showPassword() ? "text" : "password"}
                       placeholder="Enter new password"
                       value={password()}
                       onInput={handlePasswordChange}
-                      class="flex-1 bg-transparent outline-none text-white placeholder-white/80"
+                      class="flex-1 bg-transparent outline-none text-white placeholder-pink-200/80"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword())}
-                      class="ml-3 text-red-700 hover:text-white transition-colors duration-300"
+                      class="ml-3 text-pink-400 hover:text-pink-200 transition-colors duration-300"
                     >
                       {showPassword() ? <EyeOff class="w-5 h-5" /> : <Eye class="w-5 h-5" />}
                     </button>
@@ -320,7 +320,7 @@ export default function CreatePasswordPage() {
                 {password() && (
                   <div class="mb-6">
                     <div class="flex items-center justify-between mb-2">
-                      <span class="text-red-100 text-sm">Password Strength</span>
+                      <span class="text-pink-100 text-sm">Password Strength</span>
                       <span class={`text-sm font-medium ${getStrengthTextColor()}`}>
                         {getStrengthText()}
                       </span>
@@ -331,22 +331,22 @@ export default function CreatePasswordPage() {
                         style={`width: ${(passwordStrength() / 5) * 100}%`}
                       ></div>
                     </div>
-                    <div class="mt-2 text-xs text-red-200/70">
+                    <div class="mt-2 text-xs text-pink-200/70">
                       <p>Password must contain:</p>
                       <ul class="mt-1 space-y-1">
-                        <li class={password().length >= 8 ? 'text-green-400' : 'text-red-200/70'}>
+                        <li class={password().length >= 8 ? 'text-green-400' : 'text-pink-200/70'}>
                           • At least 8 characters
                         </li>
-                        <li class={/[A-Z]/.test(password()) ? 'text-green-400' : 'text-red-200/70'}>
+                        <li class={/[A-Z]/.test(password()) ? 'text-green-400' : 'text-pink-200/70'}>
                           • One uppercase letter
                         </li>
-                        <li class={/[a-z]/.test(password()) ? 'text-green-400' : 'text-red-200/70'}>
+                        <li class={/[a-z]/.test(password()) ? 'text-green-400' : 'text-pink-200/70'}>
                           • One lowercase letter
                         </li>
-                        <li class={/\d/.test(password()) ? 'text-green-400' : 'text-red-200/70'}>
+                        <li class={/\d/.test(password()) ? 'text-green-400' : 'text-pink-200/70'}>
                           • One number
                         </li>
-                        <li class={/[!@#$%^&*(),.?":{}|<>]/.test(password()) ? 'text-green-400' : 'text-red-200/70'}>
+                        <li class={/[!@#$%^&*(),.?":{}|<>]/.test(password()) ? 'text-green-400' : 'text-pink-200/70'}>
                           • One special character
                         </li>
                       </ul>
@@ -356,22 +356,22 @@ export default function CreatePasswordPage() {
 
                 {/* Confirm Password Input */}
                 <div class="relative mb-6 group">
-                  <div class="absolute inset-0 bg-red-800/20 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-red-800/30 transition-all duration-300"></div>
+                  <div class="absolute inset-0 bg-pink-400/15 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-pink-400/20 transition-all duration-300"></div>
                   <div class={`relative flex items-center bg-gray-900/20 backdrop-blur-sm rounded-2xl px-4 py-4 border transition-all duration-300 ${
-                    errors().confirmPassword ? 'border-red-400/60' : 'border-red-700/30 group-focus-within:border-red-700/60'
+                    errors().confirmPassword ? 'border-red-400/60' : 'border-pink-400/30 group-focus-within:border-pink-400/60'
                   }`}>
-                    <Shield class="w-5 h-5 text-red-700 mr-3" />
+                    <Shield class="w-5 h-5 text-pink-400 mr-3" />
                     <input
                       type={showConfirmPassword() ? "text" : "password"}
                       placeholder="Confirm new password"
                       value={confirmPassword()}
                       onInput={handleConfirmPasswordChange}
-                      class="flex-1 bg-transparent outline-none text-white placeholder-white/80"
+                      class="flex-1 bg-transparent outline-none text-white placeholder-pink-200/80"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword())}
-                      class="ml-3 text-red-700 hover:text-white transition-colors duration-300"
+                      class="ml-3 text-pink-400 hover:text-pink-200 transition-colors duration-300"
                     >
                       {showConfirmPassword() ? <EyeOff class="w-5 h-5" /> : <Eye class="w-5 h-5" />}
                     </button>
@@ -387,14 +387,13 @@ export default function CreatePasswordPage() {
                 {/* Create Password Button */}
                 <button
                   type="submit"
-                  class="group relative w-full bg-white text-red-800 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="group relative w-full bg-gradient-to-r from-pink-400 to-pink-500 text-black py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed hover:from-pink-300 hover:to-pink-400"
                   disabled={isLoading()}
                 >
-                  <div class="absolute inset-0 bg-gradient-to-r from-red-800 to-red-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <span class="relative z-10 group-hover:text-white transition-colors duration-300 flex items-center justify-center gap-2">
+                  <span class="relative z-10 flex items-center justify-center gap-2">
                     {isLoading() ? (
                       <>
-                        <div class="w-5 h-5 border-2 border-red-800 border-t-transparent rounded-full animate-spin"></div>
+                        <div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                         Creating Password...
                       </>
                     ) : (
@@ -419,19 +418,19 @@ export default function CreatePasswordPage() {
                 {/* Success Message */}
                 <div class="text-center mb-8">
                   <h2 class="text-3xl font-black text-white mb-2">Password Created!</h2>
-                  <p class="text-red-100 text-sm leading-relaxed mb-4">
+                  <p class="text-pink-100 text-sm leading-relaxed mb-4">
                     Your password has been successfully created. Please login with your new password.
                   </p>
                   {getUserEmail() && (
-                    <p class="text-white font-semibold text-sm bg-gray-800/60 rounded-xl px-4 py-2 border border-red-700/30">
+                    <p class="text-white font-semibold text-sm bg-gray-800/60 rounded-xl px-4 py-2 border border-pink-400/20">
                       {getUserEmail()}
                     </p>
                   )}
                 </div>
 
                 {/* Success Details */}
-                <div class="bg-gray-800/40 rounded-2xl p-4 mb-6 border border-red-700/30">
-                  <p class="text-red-100 text-sm leading-relaxed">
+                <div class="bg-gray-800/40 rounded-2xl p-4 mb-6 border border-pink-400/20">
+                  <p class="text-pink-100 text-sm leading-relaxed">
                     🎉 Password berhasil dibuat! Silakan login dengan password baru Anda untuk mengakses akun.
                   </p>
                 </div>
@@ -439,10 +438,9 @@ export default function CreatePasswordPage() {
                 {/* Continue to Login Button */}
                 <button
                   onClick={handleContinue}
-                  class="group relative w-full bg-white text-red-800 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden"
+                  class="group relative w-full bg-gradient-to-r from-pink-400 to-pink-500 text-black py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden hover:from-pink-300 hover:to-pink-400"
                 >
-                  <div class="absolute inset-0 bg-gradient-to-r from-red-800 to-red-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <span class="relative z-10 group-hover:text-white transition-colors duration-300 flex items-center justify-center gap-2">
+                  <span class="relative z-10 flex items-center justify-center gap-2">
                     <CheckCircle class="w-5 h-5" />
                     GO TO LOGIN
                   </span>
@@ -453,12 +451,12 @@ export default function CreatePasswordPage() {
 
           {/* Security Tips */}
           <div class="mt-8 text-center">
-            <div class="bg-gray-800/40 backdrop-blur-sm rounded-2xl p-6 border border-red-700/30">
+            <div class="bg-gray-800/40 backdrop-blur-sm rounded-2xl p-6 border border-pink-400/20">
               <h3 class="text-white font-semibold mb-2">Security Tips</h3>
-              <p class="text-red-100 text-sm mb-4">
+              <p class="text-pink-100 text-sm mb-4">
                 Keep your password secure and don't share it with anyone.
               </p>
-              <div class="text-xs text-red-200/70 space-y-1">
+              <div class="text-xs text-pink-200/70 space-y-1">
                 <p>• Use a unique password for this account</p>
                 <p>• Consider using a password manager</p>
                 <p>• Enable two-factor authentication when available</p>

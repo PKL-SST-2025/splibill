@@ -83,11 +83,11 @@ export default function VerifyEmailPage() {
 
   return (
     <div class="min-h-screen bg-black relative overflow-hidden">
-      {/* Background animation with red colors */}
+      {/* Background animation with soft pink colors */}
       <div class="absolute inset-0 overflow-hidden">
-        <div class="absolute -top-4 -right-4 w-72 h-72 bg-red-800/20 rounded-full blur-3xl animate-pulse"></div>
-        <div class="absolute -bottom-8 -left-8 w-96 h-96 bg-red-900/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-red-800/15 rounded-full blur-2xl animate-pulse delay-500"></div>
+        <div class="absolute -top-4 -right-4 w-72 h-72 bg-pink-300/20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute -bottom-8 -left-8 w-96 h-96 bg-pink-200/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-pink-300/15 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
       {/* Floating elements */}
@@ -95,10 +95,10 @@ export default function VerifyEmailPage() {
         <Heart class="w-6 h-6 text-white/30" />
       </div>
       <div class="absolute top-32 right-20 animate-bounce delay-700">
-        <Sparkles class="w-4 h-4 text-red-700/60" />
+        <Sparkles class="w-4 h-4 text-pink-300/60" />
       </div>
       <div class="absolute bottom-32 left-20 animate-bounce delay-1000">
-        <div class="w-3 h-3 bg-white/30 rounded-full"></div>
+        <div class="w-3 h-3 bg-pink-200/30 rounded-full"></div>
       </div>
 
       <div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
@@ -112,25 +112,25 @@ export default function VerifyEmailPage() {
             <span class="text-sm font-medium">Back</span>
           </button>
 
-          <div class="bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-red-700/30 hover:bg-gray-800/25 transition-all duration-500">
+          <div class="bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-pink-300/30 hover:bg-gray-800/25 transition-all duration-500">
             {!isVerified() ? (
               <>
                 {/* Icon */}
                 <div class="relative mb-6">
-                  <div class="absolute inset-0 bg-red-800/30 rounded-full blur-xl animate-pulse"></div>
-                  <div class="relative w-24 h-24 mx-auto rounded-full border-4 border-red-700/50 overflow-hidden bg-gradient-to-br from-red-800 to-red-900 shadow-2xl flex items-center justify-center">
-                    <Mail class="w-12 h-12 text-white/90" />
+                  <div class="absolute inset-0 bg-pink-300/30 rounded-full blur-xl animate-pulse"></div>
+                  <div class="relative w-24 h-24 mx-auto rounded-full border-4 border-pink-300/50 overflow-hidden bg-gradient-to-br from-pink-300 to-pink-400 shadow-2xl flex items-center justify-center">
+                    <Mail class="w-12 h-12 text-black/80" />
                   </div>
                 </div>
 
                 {/* Title */}
                 <div class="text-center mb-8">
                   <h2 class="text-3xl font-black text-white mb-2">Verify Your Email</h2>
-                  <p class="text-red-100 text-sm leading-relaxed mb-4">
+                  <p class="text-pink-100 text-sm leading-relaxed mb-4">
                     We've sent a 6-digit verification code to your email address
                   </p>
                   {userEmail && (
-                    <p class="text-white font-semibold text-sm bg-gray-900/40 rounded-xl px-4 py-2 border border-red-700/30">
+                    <p class="text-white font-semibold text-sm bg-gray-900/40 rounded-xl px-4 py-2 border border-pink-300/30">
                       {userEmail}
                     </p>
                   )}
@@ -138,9 +138,9 @@ export default function VerifyEmailPage() {
 
                 {/* Verification Code Input */}
                 <div class="relative mb-6 group">
-                  <div class="absolute inset-0 bg-red-800/20 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-red-800/30 transition-all duration-300"></div>
+                  <div class="absolute inset-0 bg-pink-300/20 rounded-2xl blur-sm group-focus-within:blur-none group-focus-within:bg-pink-300/30 transition-all duration-300"></div>
                   <div class={`relative flex items-center justify-center bg-gray-900/20 backdrop-blur-sm rounded-2xl px-4 py-4 border transition-all duration-300 ${
-                    hasError() ? 'border-red-400/60' : 'border-red-700/30 group-focus-within:border-red-700/60'
+                    hasError() ? 'border-pink-400/60' : 'border-pink-300/30 group-focus-within:border-pink-300/60'
                   }`}>
                     <input
                       type="text"
@@ -152,7 +152,7 @@ export default function VerifyEmailPage() {
                     />
                   </div>
                   {hasError() && (
-                    <div class="flex items-center gap-2 mt-2 text-red-400 text-sm">
+                    <div class="flex items-center gap-2 mt-2 text-pink-400 text-sm">
                       <AlertCircle class="w-4 h-4" />
                       <span>Invalid verification code. Please try again.</span>
                     </div>
@@ -162,14 +162,14 @@ export default function VerifyEmailPage() {
                 {/* Verify Button */}
                 <button
                   onClick={handleVerify}
-                  class="group relative w-full bg-white text-red-800 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="group relative w-full bg-gradient-to-r from-pink-300 to-pink-200 text-black py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading() || verificationCode().length !== 6}
                 >
-                  <div class="absolute inset-0 bg-gradient-to-r from-red-800 to-red-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <span class="relative z-10 group-hover:text-white transition-colors duration-300 flex items-center justify-center gap-2">
+                  <div class="absolute inset-0 bg-gradient-to-r from-pink-400 to-pink-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span class="relative z-10 transition-colors duration-300 flex items-center justify-center gap-2">
                     {isLoading() ? (
                       <>
-                        <div class="w-5 h-5 border-2 border-red-800 border-t-transparent rounded-full animate-spin"></div>
+                        <div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                         Verifying...
                       </>
                     ) : (
@@ -183,19 +183,19 @@ export default function VerifyEmailPage() {
 
                 {/* Resend Section */}
                 <div class="mt-6 text-center">
-                  <p class="text-red-100 text-sm mb-4">
+                  <p class="text-pink-100 text-sm mb-4">
                     Didn't receive the code?
                   </p>
                   
                   {canResend() ? (
                     <button
                       onClick={handleResend}
-                      class="group relative text-red-700 font-semibold hover:text-white hover:scale-105 transition-all duration-300 text-sm flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+                      class="group relative text-pink-300 font-semibold hover:text-white hover:scale-105 transition-all duration-300 text-sm flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
                       disabled={isResending()}
                     >
                       {isResending() ? (
                         <>
-                          <div class="w-4 h-4 border-2 border-red-700 border-t-transparent rounded-full animate-spin"></div>
+                          <div class="w-4 h-4 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></div>
                           Resending...
                         </>
                       ) : (
@@ -206,7 +206,7 @@ export default function VerifyEmailPage() {
                       )}
                     </button>
                   ) : (
-                    <div class="flex items-center justify-center gap-2 text-red-200/70 text-sm">
+                    <div class="flex items-center justify-center gap-2 text-pink-200/70 text-sm">
                       <Clock class="w-4 h-4" />
                       <span>Resend in {countdown()}s</span>
                     </div>
@@ -217,28 +217,28 @@ export default function VerifyEmailPage() {
               <>
                 {/* Success Icon */}
                 <div class="relative mb-6">
-                  <div class="absolute inset-0 bg-red-800/30 rounded-full blur-xl animate-pulse"></div>
-                  <div class="relative w-24 h-24 mx-auto rounded-full border-4 border-red-700/50 overflow-hidden bg-gradient-to-br from-red-800 to-red-900 shadow-2xl flex items-center justify-center">
-                    <CheckCircle class="w-12 h-12 text-white animate-pulse" />
+                  <div class="absolute inset-0 bg-pink-300/30 rounded-full blur-xl animate-pulse"></div>
+                  <div class="relative w-24 h-24 mx-auto rounded-full border-4 border-pink-300/50 overflow-hidden bg-gradient-to-br from-pink-300 to-pink-400 shadow-2xl flex items-center justify-center">
+                    <CheckCircle class="w-12 h-12 text-black animate-pulse" />
                   </div>
                 </div>
 
                 {/* Success Message */}
                 <div class="text-center mb-8">
                   <h2 class="text-3xl font-black text-white mb-2">Email Verified!</h2>
-                  <p class="text-red-100 text-sm leading-relaxed mb-4">
+                  <p class="text-pink-100 text-sm leading-relaxed mb-4">
                     Your email has been successfully verified. Now let's create a new password for your account.
                   </p>
                   {userEmail && (
-                    <p class="text-white font-semibold text-sm bg-gray-900/40 rounded-xl px-4 py-2 border border-red-700/30">
+                    <p class="text-white font-semibold text-sm bg-gray-900/40 rounded-xl px-4 py-2 border border-pink-300/30">
                       {userEmail}
                     </p>
                   )}
                 </div>
 
                 {/* Success Details */}
-                <div class="bg-gray-900/20 rounded-2xl p-4 mb-6 border border-red-700/20">
-                  <p class="text-red-100 text-sm leading-relaxed">
+                <div class="bg-gray-900/20 rounded-2xl p-4 mb-6 border border-pink-300/20">
+                  <p class="text-pink-100 text-sm leading-relaxed">
                     🔐 Next step: Create a secure password to protect your account.
                   </p>
                 </div>
@@ -246,10 +246,10 @@ export default function VerifyEmailPage() {
                 {/* Continue Button */}
                 <button
                   onClick={handleContinue}
-                  class="group relative w-full bg-white text-red-800 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden"
+                  class="group relative w-full bg-gradient-to-r from-pink-300 to-pink-200 text-black py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl overflow-hidden"
                 >
-                  <div class="absolute inset-0 bg-gradient-to-r from-red-800 to-red-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <span class="relative z-10 group-hover:text-white transition-colors duration-300 flex items-center justify-center gap-2">
+                  <div class="absolute inset-0 bg-gradient-to-r from-pink-400 to-pink-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span class="relative z-10 transition-colors duration-300 flex items-center justify-center gap-2">
                     <CheckCircle class="w-5 h-5" />
                     CREATE NEW PASSWORD
                   </span>
@@ -259,7 +259,7 @@ export default function VerifyEmailPage() {
 
             {/* Login link */}
             <div class="text-center mt-6">
-              <p class="text-red-100 text-sm">
+              <p class="text-pink-100 text-sm">
                 Already verified?{" "}
                 <button
                   onClick={handleLogin}
@@ -273,12 +273,12 @@ export default function VerifyEmailPage() {
 
           {/* Help Section */}
           <div class="mt-8 text-center">
-            <div class="bg-gray-900/40 backdrop-blur-sm rounded-2xl p-6 border border-red-700/20">
+            <div class="bg-gray-900/40 backdrop-blur-sm rounded-2xl p-6 border border-pink-300/20">
               <h3 class="text-white font-semibold mb-2">Need Help?</h3>
-              <p class="text-red-100/70 text-sm mb-4">
+              <p class="text-pink-100/70 text-sm mb-4">
                 If you're having trouble with verification, our support team is here to help.
               </p>
-              <button class="text-red-700 hover:text-white transition-colors duration-300 text-sm font-medium">
+              <button class="text-pink-300 hover:text-white transition-colors duration-300 text-sm font-medium">
                 Contact Support
               </button>
             </div>

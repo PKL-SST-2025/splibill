@@ -8,28 +8,9 @@ export default function FinancePage() {
   const [isMobile, setIsMobile] = createSignal(false);
   const [animate, setAnimate] = createSignal(false);
   
-  // Sample data - Extended for better scrolling demonstration
-  const [transactions] = createSignal([
-    { id: 1, title: "Dinner at Sushi Tei", date: "2025-07-12", amount: -120000, type: "expense", icon: DollarSign },
-    { id: 2, title: "Split Bill - Bali Trip", date: "2025-07-11", amount: -300000, type: "expense", icon: Heart },
-    { id: 3, title: "Coffee Meeting", date: "2025-07-10", amount: -45000, type: "expense", icon: CreditCard },
-    { id: 4, title: "Lunch with Team", date: "2025-07-09", amount: -85000, type: "expense", icon: DollarSign },
-    { id: 5, title: "Movie Night", date: "2025-07-08", amount: -60000, type: "expense", icon: Heart },
-    { id: 6, title: "Grocery Shopping", date: "2025-07-07", amount: -150000, type: "expense", icon: CreditCard },
-    { id: 7, title: "Gas Station", date: "2025-07-06", amount: -75000, type: "expense", icon: DollarSign },
-    { id: 8, title: "Restaurant Bill", date: "2025-07-05", amount: -95000, type: "expense", icon: Heart },
-  ]);
-
-  const [waitingPayments] = createSignal([
-    { name: "Budi", amount: 250000, avatar: "B" },
-    { name: "Sari", amount: 150000, avatar: "S" },
-    { name: "Dina", amount: 75000, avatar: "D" },
-    { name: "Ahmad", amount: 180000, avatar: "A" },
-    { name: "Maya", amount: 220000, avatar: "M" },
-    { name: "Rizki", amount: 90000, avatar: "R" },
-    { name: "Luna", amount: 130000, avatar: "L" },
-    { name: "Fajar", amount: 170000, avatar: "F" },
-  ]);
+  // Empty data - will be populated when user adds transactions/payments
+  const [transactions] = createSignal([]);
+  const [waitingPayments] = createSignal([]);
 
   onMount(() => {
     const checkMobile = () => {
@@ -55,20 +36,21 @@ export default function FinancePage() {
   };
 
   const handleLogout = () => {
-  // Add logout logic here - clear auth tokens, redirect to login, etc.
-  if (confirm("Are you sure you want to log out?")) {
-    // Clear any stored authentication data
-    // localStorage.removeItem('auth_token'); // if using localStorage
-    // sessionStorage.clear(); // if using sessionStorage
-    
-    // Redirect to login page
-    navigate("/login");
-  }
-};
+    // Add logout logic here - clear auth tokens, redirect to login, etc.
+    if (confirm("Are you sure you want to log out?")) {
+      // Clear any stored authentication data
+      // localStorage.removeItem('auth_token'); // if using localStorage
+      // sessionStorage.clear(); // if using sessionStorage
+      
+      // Redirect to login page
+      navigate("/login");
+    }
+  };
 
-  const totalBillPaid = () => 1200000;
-  const totalPending = () => waitingPayments().reduce((sum, payment) => sum + payment.amount, 0);
-  const currentBalance = () => 700000;
+  // All financial data starts at 0
+  const totalBillPaid = () => 0;
+  const totalPending = () => 0; // Since waitingPayments is empty, return 0 directly
+  const currentBalance = () => 0;
 
   return (
     <div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex relative overflow-hidden">
@@ -195,7 +177,6 @@ export default function FinancePage() {
           </div>
 
           {/* Friends */}
-        
           <div class="relative group">
             <button 
               onClick={() => navigate("/friends")} 
@@ -215,90 +196,92 @@ export default function FinancePage() {
               </div>
             )}
           </div>
+
           {/* Add Friend */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/addfriend")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <UserPlus class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Add Friend</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Add Friend
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account */}
-<div class="relative group">
-  <button 
-    onClick={() => navigate("/account")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <User class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
-{/* Account Settings - Submenu */}
-<div class="relative group ml-4">
-  <button 
-    onClick={() => navigate("/accountsettings")} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <Settings class="w-4 h-4 flex-shrink-0" />
-    <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Account Settings</span>
-  </button>
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Account Settings
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/addfriend")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <UserPlus class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Add Friend</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Add Friend
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Account */}
+          <div class="relative group">
+            <button 
+              onClick={() => navigate("/account")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <User class="w-5 h-5 flex-shrink-0" />
+              <span class={`font-medium transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Account Settings - Submenu */}
+          <div class="relative group ml-4">
+            <button 
+              onClick={() => navigate("/accountsettings")} 
+              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
+                !isSidebarOpen() ? 'justify-center' : ''
+              }`}
+            >
+              <Settings class="w-4 h-4 flex-shrink-0" />
+              <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
+                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+              }`}>Account Settings</span>
+            </button>
+            {!isSidebarOpen() && !isMobile() && (
+              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                Account Settings
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
         </nav>
 
-      
         {/* Logout Button */}
-<div class="relative group">
-  <button 
-    onClick={handleLogout} 
-    class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
-      !isSidebarOpen() ? 'justify-center' : ''
-    }`}
-  >
-    <LogOut class="w-5 h-5 flex-shrink-0" />
-    <span class={`font-medium transition-all duration-300 overflow-hidden ${
-      isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-    }`}>Log Out</span>
-  </button>
-  {/* Tooltip untuk collapsed state */}
-  {!isSidebarOpen() && !isMobile() && (
-    <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-      Log Out
-      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-    </div>
-  )}
-</div>
+        <div class="relative group">
+          <button 
+            onClick={handleLogout} 
+            class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
+              !isSidebarOpen() ? 'justify-center' : ''
+            }`}
+          >
+            <LogOut class="w-5 h-5 flex-shrink-0" />
+            <span class={`font-medium transition-all duration-300 overflow-hidden ${
+              isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+            }`}>Log Out</span>
+          </button>
+          {/* Tooltip untuk collapsed state */}
+          {!isSidebarOpen() && !isMobile() && (
+            <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+              Log Out
+              <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
+            </div>
+          )}
+        </div>
       </aside>
 
       {/* Overlay for mobile */}
@@ -346,7 +329,7 @@ export default function FinancePage() {
           </div>
         </header>
 
-        {/* Financial Summary Cards */}
+        {/* Financial Summary Cards - Now showing 0 values */}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-700 hover:scale-105 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 200ms">
             <div class="flex items-center justify-between mb-4">
@@ -354,8 +337,7 @@ export default function FinancePage() {
                 <DollarSign class="w-6 h-6 text-emerald-400" />
               </div>
               <div class="flex items-center gap-1">
-                <ArrowUp class="w-4 h-4 text-emerald-400" />
-                <span class="text-emerald-400 text-sm font-medium">+12%</span>
+                <span class="text-gray-500 text-sm font-medium">0%</span>
               </div>
             </div>
             <h3 class="text-2xl font-bold text-white">Rp {totalBillPaid().toLocaleString()}</h3>
@@ -368,8 +350,7 @@ export default function FinancePage() {
                 <Clock class="w-6 h-6 text-amber-400" />
               </div>
               <div class="flex items-center gap-1">
-                <ArrowDown class="w-4 h-4 text-amber-400" />
-                <span class="text-amber-400 text-sm font-medium">-5%</span>
+                <span class="text-gray-500 text-sm font-medium">0%</span>
               </div>
             </div>
             <h3 class="text-2xl font-bold text-white">Rp {totalPending().toLocaleString()}</h3>
@@ -382,8 +363,7 @@ export default function FinancePage() {
                 <Wallet class="w-6 h-6 text-purple-400" />
               </div>
               <div class="flex items-center gap-1">
-                <ArrowUp class="w-4 h-4 text-purple-400" />
-                <span class="text-purple-400 text-sm font-medium">+8%</span>
+                <span class="text-gray-500 text-sm font-medium">0%</span>
               </div>
             </div>
             <h3 class="text-2xl font-bold text-white">Rp {currentBalance().toLocaleString()}</h3>
@@ -403,14 +383,14 @@ export default function FinancePage() {
               <div class="w-32 h-32 mx-auto mb-4 bg-pink-200/20 rounded-full flex items-center justify-center border-4 border-pink-200/30">
                 <TrendingUp class="w-12 h-12 text-pink-200" />
               </div>
-              <p class="text-pink-200 text-lg font-semibold">Interactive Chart</p>
-              <p class="text-gray-400 text-sm">Coming Soon</p>
+              <p class="text-pink-200 text-lg font-semibold">No Data Available</p>
+              <p class="text-gray-400 text-sm">Start adding bills to see your spending distribution</p>
             </div>
           </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Waiting Payments - Now Scrollable */}
+          {/* Waiting Payments - Empty State */}
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
             <div class="flex items-center justify-between mb-6">
               <div class="flex items-center gap-3">
@@ -424,28 +404,23 @@ export default function FinancePage() {
               </div>
             </div>
             
-            {/* Scrollable container with custom scrollbar */}
-            <div class="max-h-80 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50">
-              <For each={waitingPayments()}>
-                {(payment) => (
-                  <div class="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-[1.02]">
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
-                        <span class="text-white font-bold">{payment.avatar}</span>
-                      </div>
-                      <span class="text-white font-semibold">{payment.name}</span>
-                    </div>
-                    <div class="text-right">
-                      <p class="text-amber-300 font-bold">Rp {payment.amount.toLocaleString()}</p>
-                      <p class="text-amber-400 text-sm">Waiting</p>
-                    </div>
-                  </div>
-                )}
-              </For>
-            </div>
+            {/* Empty state */}
+            {waitingPayments().length === 0 ? (
+              <div class="flex flex-col items-center justify-center h-64 text-center">
+                <div class="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mb-4">
+                  <Users class="w-8 h-8 text-amber-400" />
+                </div>
+                <p class="text-gray-300 font-medium mb-2">No Pending Payments</p>
+                <p class="text-gray-500 text-sm">Payments waiting for you will appear here</p>
+              </div>
+            ) : (
+              <div class="max-h-80 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50">
+                {/* This section will be populated when there are waiting payments */}
+              </div>
+            )}
           </div>
 
-          {/* Latest Transactions - Now Scrollable */}
+          {/* Latest Transactions - Empty State */}
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1200ms">
             <div class="flex items-center justify-between mb-6">
               <div class="flex items-center gap-3">
@@ -459,33 +434,20 @@ export default function FinancePage() {
               </div>
             </div>
             
-            {/* Scrollable container with custom scrollbar */}
-            <div class="max-h-80 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50">
-              <For each={transactions()}>
-                {(transaction) => (
-                  <div class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300 hover:scale-[1.02]">
-                    <div class="flex items-center justify-between mb-2">
-                      <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                          <transaction.icon class="w-5 h-5 text-emerald-400" />
-                        </div>
-                        <div>
-                          <p class="font-semibold text-white">{transaction.title}</p>
-                          <div class="flex items-center gap-2 text-gray-400 text-sm">
-                            <Calendar class="w-4 h-4" />
-                            <span>{transaction.date}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="text-right">
-                        <p class="text-emerald-300 font-bold">Rp {Math.abs(transaction.amount).toLocaleString()}</p>
-                        <p class="text-emerald-400 text-sm">Completed</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </For>
-            </div>
+            {/* Empty state */}
+            {transactions().length === 0 ? (
+              <div class="flex flex-col items-center justify-center h-64 text-center">
+                <div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
+                  <CreditCard class="w-8 h-8 text-emerald-400" />
+                </div>
+                <p class="text-gray-300 font-medium mb-2">No Transactions Yet</p>
+                <p class="text-gray-500 text-sm">Your transaction history will appear here</p>
+              </div>
+            ) : (
+              <div class="max-h-80 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50">
+                {/* This section will be populated when there are transactions */}
+              </div>
+            )}
           </div>
         </div>
       </main>
