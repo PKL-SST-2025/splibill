@@ -1,4 +1,4 @@
-import { createSignal, createEffect, For, onMount } from "solid-js";
+import { createSignal, createEffect, For, onMount, onCleanup } from "solid-js";
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import am4themesAnimated from "@amcharts/amcharts4/themes/animated";
@@ -67,6 +67,9 @@ export default function Dashboard() {
   const [friends, setFriends] = createSignal<Friend[]>([]);
   const [notifications, setNotifications] = createSignal<Notification[]>([]);
 
+  // Chart reference
+  let chart: am4charts.XYChart | null = null;
+
   // Load data dari localStorage saat component mount
   const loadDataFromStorage = () => {
     try {
@@ -95,6 +98,35 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error loading data from localStorage:', error);
+    }
+  };
+
+  // Function to update chart data
+  const updateChartData = () => {
+    if (!chart) return;
+
+    const bills = splitBills();
+    if (bills.length > 0) {
+      // Group bills by date and sum the totals
+      const groupedByDate = bills.reduce((acc: Record<string, number>, bill: SplitBill) => {
+        const date = bill.date;
+        acc[date] = (acc[date] || 0) + bill.total;
+        return acc;
+      }, {});
+
+      // Convert to chart data format and sort by date
+      const chartData = Object.entries(groupedByDate)
+        .map(([date, total]) => ({
+          date: new Date(date),
+          value: total,
+        }))
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      chart.data = chartData;
+      console.log('Chart data updated:', chartData);
+    } else {
+      chart.data = [];
+      console.log('Chart data cleared');
     }
   };
 
@@ -298,9 +330,75 @@ export default function Dashboard() {
     }
   };
 
-  let chart: am4charts.XYChart;
+  // Initialize chart
+  const initializeChart = () => {
+    try {
+      // Dispose existing chart if any
+      if (chart) {
+        chart.dispose();
+      }
+
+      // Create new chart
+      chart = am4core.create("chartdiv", am4charts.XYChart);
+      
+      if (!chart) {
+        console.error('Failed to create chart');
+        return;
+      }
+
+      chart.paddingRight = 20;
+      chart.paddingLeft = 20;
+      chart.paddingTop = 20;
+      chart.paddingBottom = 20;
+
+      // Dark theme for chart
+      chart.background.fill = am4core.color("#1f2937");
+      chart.plotContainer.background.fill = am4core.color("#1f2937");
+
+      // Create date axis
+      const dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+      dateAxis.renderer.grid.template.stroke = am4core.color("#374151");
+      dateAxis.renderer.labels.template.fill = am4core.color("#d1d5db");
+      dateAxis.renderer.minGridDistance = 50;
+
+      // Create value axis
+      const valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+      valueAxis.renderer.grid.template.stroke = am4core.color("#374151");
+      valueAxis.renderer.labels.template.fill = am4core.color("#d1d5db");
+
+      // Create series
+      const series = chart.series.push(new am4charts.LineSeries());
+      series.dataFields.dateX = "date";
+      series.dataFields.valueY = "value";
+      series.strokeWidth = 3;
+      series.stroke = am4core.color("#f9a8d4");
+      series.fillOpacity = 0.1;
+      series.fill = am4core.color("#f9a8d4");
+
+      // Add bullets
+      const bullet = series.bullets.push(new am4charts.CircleBullet());
+      bullet.circle.radius = 6;
+      bullet.circle.fill = am4core.color("#f9a8d4");
+      bullet.circle.stroke = am4core.color("#ffffff");
+      bullet.circle.strokeWidth = 2;
+
+      // Add cursor
+      chart.cursor = new am4charts.XYCursor();
+      chart.cursor.lineY.disabled = true;
+
+      console.log('Chart initialized successfully');
+      
+      // Update chart with current data
+      updateChartData();
+      
+    } catch (error) {
+      console.error('Error initializing chart:', error);
+    }
+  };
 
   onMount(() => {
+    console.log('Dashboard component mounted');
+    
     // Load data dari localStorage saat component mount
     loadDataFromStorage();
     
@@ -316,71 +414,38 @@ export default function Dashboard() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
-    // Initialize chart
-    chart = am4core.create("chartdiv", am4charts.XYChart);
-    chart.paddingRight = 20;
-    chart.paddingLeft = 20;
-    chart.paddingTop = 20;
-    chart.paddingBottom = 20;
-
-    // Dark theme for chart
-    chart.background.fill = am4core.color("#1f2937");
-    chart.plotContainer.background.fill = am4core.color("#1f2937");
-
-    // Empty data initially
-    chart.data = [];
-
-    const dateAxis = chart.xAxes.push(new am4charts.DateAxis());
-    dateAxis.renderer.grid.template.stroke = am4core.color("#374151");
-    dateAxis.renderer.labels.template.fill = am4core.color("#d1d5db");
+    // Initialize chart after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      initializeChart();
+    }, 100);
     
-    const valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
-    valueAxis.renderer.grid.template.stroke = am4core.color("#374151");
-    valueAxis.renderer.labels.template.fill = am4core.color("#d1d5db");
-
-    const series = chart.series.push(new am4charts.LineSeries());
-    series.dataFields.dateX = "date";
-    series.dataFields.valueY = "value";
-    series.strokeWidth = 3;
-    series.stroke = am4core.color("#f9a8d4");
-    series.fillOpacity = 0.1;
-    series.fill = am4core.color("#f9a8d4");
-
-    const bullet = series.bullets.push(new am4charts.CircleBullet());
-    bullet.circle.radius = 6;
-    bullet.circle.fill = am4core.color("#f9a8d4");
-    bullet.circle.stroke = am4core.color("#ffffff");
-    bullet.circle.strokeWidth = 2;
-
     // Reload data setiap kali halaman difokuskan (untuk mendeteksi perubahan dari halaman lain)
     const handleFocus = () => {
+      console.log('Window focused, reloading data');
       loadDataFromStorage();
     };
     
     window.addEventListener('focus', handleFocus);
 
-    return () => {
-      if (chart) chart.dispose();
+    // Cleanup function
+    onCleanup(() => {
+      if (chart) {
+        chart.dispose();
+        chart = null;
+      }
       window.removeEventListener('resize', checkMobile);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('click', handleClickOutside);
-    };
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    });
   });
 
   // Update chart when splitBills changes
   createEffect(() => {
-    if (chart && splitBills().length > 0) {
-      const chartData = splitBills()
-        .map((bill: SplitBill) => ({
-          date: new Date(bill.date),
-          value: bill.total,
-        }))
-        .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date
-      
-      chart.data = chartData;
-    } else if (chart) {
-      chart.data = [];
-    }
+    console.log('SplitBills changed, updating chart. Bills count:', splitBills().length);
+    updateChartData();
   });
 
   const handleDateClick = (date: any) => {
@@ -948,7 +1013,7 @@ export default function Dashboard() {
             </div>
           </div>
           {splitBills().length > 0 ? (
-            <div id="chartdiv" class="w-full h-80 rounded-xl overflow-hidden" />
+            <div id="chartdiv" class="w-full h-80 rounded-xl overflow-hidden bg-gray-800/30" />
           ) : (
             <div class="w-full h-80 rounded-xl bg-gray-800/30 border-2 border-dashed border-gray-600/50 flex items-center justify-center">
               <div class="text-center">

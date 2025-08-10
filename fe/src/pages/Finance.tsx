@@ -1,6 +1,32 @@
 import { createSignal, onMount, For } from "solid-js";
-import { DollarSign, Clock, Heart, TrendingUp, ArrowUp, ArrowDown, CreditCard, Wallet, Users, UserPlus, Calendar, Bell, Search, ChevronLeft, ChevronRight, Menu, X, Sparkles, Plus, LogOut, Settings, User } from "lucide-solid";
+import { DollarSign, Clock, Heart, TrendingUp, ArrowUp, ArrowDown, CreditCard, Wallet, Users, UserPlus, Calendar, Bell, Search, ChevronLeft, ChevronRight, Menu, X, Sparkles, Plus, LogOut, Settings, User, Receipt, Target, PiggyBank } from "lucide-solid";
 import { useNavigate } from "@solidjs/router";
+
+// Type definitions
+interface MonthlySpending {
+  month: string;
+  amount: number;
+  category: string;
+}
+
+interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  date: string;
+  status: 'settled' | 'pending';
+  category: string;
+  participants: string[];
+}
+
+interface PendingPayment {
+  id: string;
+  from: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+  avatar: string;
+}
 
 export default function FinancePage() {
   const navigate = useNavigate();
@@ -8,9 +34,12 @@ export default function FinancePage() {
   const [isMobile, setIsMobile] = createSignal(false);
   const [animate, setAnimate] = createSignal(false);
   
-  // Empty data - will be populated when user adds transactions/payments
-  const [transactions] = createSignal([]);
-  const [waitingPayments] = createSignal([]);
+  // Empty data - no auto-population
+  const [monthlySpending] = createSignal<MonthlySpending[]>([]);
+
+  const [recentTransactions] = createSignal<Transaction[]>([]);
+
+  const [pendingPayments] = createSignal<PendingPayment[]>([]);
 
   onMount(() => {
     const checkMobile = () => {
@@ -36,21 +65,19 @@ export default function FinancePage() {
   };
 
   const handleLogout = () => {
-    // Add logout logic here - clear auth tokens, redirect to login, etc.
     if (confirm("Are you sure you want to log out?")) {
-      // Clear any stored authentication data
-      // localStorage.removeItem('auth_token'); // if using localStorage
-      // sessionStorage.clear(); // if using sessionStorage
-      
-      // Redirect to login page
       navigate("/login");
     }
   };
 
-  // All financial data starts at 0
-  const totalBillPaid = () => 0;
-  const totalPending = () => 0; // Since waitingPayments is empty, return 0 directly
-  const currentBalance = () => 0;
+  // Calculate financial metrics - will return 0 for empty arrays
+  const totalExpenses = () => monthlySpending().reduce((sum, item) => sum + item.amount, 0);
+  const pendingAmount = () => pendingPayments().reduce((sum, payment) => sum + payment.amount, 0);
+  const settledAmount = () => recentTransactions()
+    .filter(t => t.status === "settled")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const formatCurrency = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`;
 
   return (
     <div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex relative overflow-hidden">
@@ -262,7 +289,7 @@ export default function FinancePage() {
         </nav>
 
         {/* Logout Button */}
-        <div class="relative group">
+        <div class="relative group p-6">
           <button 
             onClick={handleLogout} 
             class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
@@ -274,7 +301,6 @@ export default function FinancePage() {
               isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
             }`}>Log Out</span>
           </button>
-          {/* Tooltip untuk collapsed state */}
           {!isSidebarOpen() && !isMobile() && (
             <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
               Log Out
@@ -308,9 +334,9 @@ export default function FinancePage() {
             </button>
             <div>
               <h1 class={`text-3xl lg:text-4xl font-black bg-gradient-to-r from-white to-pink-200 bg-clip-text text-transparent transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
-                Finance Overview
+                Finance Dashboard
               </h1>
-              <p class="text-gray-400 mt-1">Track your expenses and manage your finances</p>
+              <p class="text-gray-400 mt-1">Monitor your spending patterns and financial health</p>
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -324,24 +350,25 @@ export default function FinancePage() {
               class="bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-6 py-3 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
               onClick={() => navigate("/addsplitbill")}
             >
-              + Add Bill
+              + New Expense
             </button>
           </div>
         </header>
 
-        {/* Financial Summary Cards - Now showing 0 values */}
+        {/* Financial Summary Cards */}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-700 hover:scale-105 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 200ms">
             <div class="flex items-center justify-between mb-4">
               <div class="p-3 bg-emerald-500/20 rounded-xl">
                 <DollarSign class="w-6 h-6 text-emerald-400" />
               </div>
-              <div class="flex items-center gap-1">
-                <span class="text-gray-500 text-sm font-medium">0%</span>
+              <div class="flex items-center gap-1 text-gray-500">
+                <ArrowUp class="w-4 h-4" />
+                <span class="text-sm font-medium">--</span>
               </div>
             </div>
-            <h3 class="text-2xl font-bold text-white">Rp {totalBillPaid().toLocaleString()}</h3>
-            <p class="text-gray-400 text-sm">Bill Paid</p>
+            <h3 class="text-2xl font-bold text-white">{formatCurrency(settledAmount())}</h3>
+            <p class="text-gray-400 text-sm">Total Settled</p>
           </div>
 
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-700 hover:scale-105 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 400ms">
@@ -349,103 +376,190 @@ export default function FinancePage() {
               <div class="p-3 bg-amber-500/20 rounded-xl">
                 <Clock class="w-6 h-6 text-amber-400" />
               </div>
-              <div class="flex items-center gap-1">
-                <span class="text-gray-500 text-sm font-medium">0%</span>
+              <div class="flex items-center gap-1 text-gray-500">
+                <ArrowDown class="w-4 h-4" />
+                <span class="text-sm font-medium">{pendingPayments().length} items</span>
               </div>
             </div>
-            <h3 class="text-2xl font-bold text-white">Rp {totalPending().toLocaleString()}</h3>
-            <p class="text-gray-400 text-sm">Pending</p>
+            <h3 class="text-2xl font-bold text-white">{formatCurrency(pendingAmount())}</h3>
+            <p class="text-gray-400 text-sm">Pending Payments</p>
           </div>
 
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-700 hover:scale-105 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 600ms">
             <div class="flex items-center justify-between mb-4">
               <div class="p-3 bg-purple-500/20 rounded-xl">
-                <Wallet class="w-6 h-6 text-purple-400" />
+                <TrendingUp class="w-6 h-6 text-purple-400" />
               </div>
-              <div class="flex items-center gap-1">
-                <span class="text-gray-500 text-sm font-medium">0%</span>
+              <div class="flex items-center gap-1 text-gray-500">
+                <TrendingUp class="w-4 h-4" />
+                <span class="text-sm font-medium">--</span>
               </div>
             </div>
-            <h3 class="text-2xl font-bold text-white">Rp {currentBalance().toLocaleString()}</h3>
-            <p class="text-gray-400 text-sm">Balance</p>
+            <h3 class="text-2xl font-bold text-white">{formatCurrency(totalExpenses())}</h3>
+            <p class="text-gray-400 text-sm">Monthly Spending</p>
           </div>
         </div>
 
-        {/* Chart Placeholder */}
+        {/* Spending Chart */}
         <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 800ms">
           <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <TrendingUp class="w-5 h-5 text-pink-200" />
-            Spending Distribution
+            Monthly Spending Trends
           </h2>
-          <div class="w-full h-80 flex items-center justify-center bg-gray-800/40 rounded-xl border border-gray-700/30 relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-pink-200/5 to-transparent animate-pulse"></div>
-            <div class="relative z-10 text-center">
-              <div class="w-32 h-32 mx-auto mb-4 bg-pink-200/20 rounded-full flex items-center justify-center border-4 border-pink-200/30">
-                <TrendingUp class="w-12 h-12 text-pink-200" />
+          {monthlySpending().length === 0 ? (
+            <div class="flex items-center justify-center h-32 text-gray-500">
+              <div class="text-center">
+                <TrendingUp class="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                <p>No spending data available</p>
+                <p class="text-sm">Add some expenses to see your trends</p>
               </div>
-              <p class="text-pink-200 text-lg font-semibold">No Data Available</p>
-              <p class="text-gray-400 text-sm">Start adding bills to see your spending distribution</p>
             </div>
-          </div>
+          ) : (
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <For each={monthlySpending()}>
+                {(item, index) => (
+                  <div class="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                    <div class="text-center">
+                      <div class="text-pink-200 font-semibold text-sm mb-1">{item.month}</div>
+                      <div class="text-white text-lg font-bold mb-2">
+                        {formatCurrency(item.amount).replace('Rp ', 'Rp')}
+                      </div>
+                      <div class="text-gray-400 text-xs">{item.category}</div>
+                      <div class="mt-2 h-2 bg-gray-700/50 rounded-full overflow-hidden">
+                        <div 
+                          class="h-full bg-gradient-to-r from-pink-200 to-pink-300 rounded-full transition-all duration-1000"
+                          style={{width: `${(item.amount / Math.max(...monthlySpending().map(s => s.amount))) * 100}%`}}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+          )}
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Waiting Payments - Empty State */}
+          {/* Pending Payments */}
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1000ms">
             <div class="flex items-center justify-between mb-6">
               <div class="flex items-center gap-3">
                 <div class="p-2 bg-amber-500/20 rounded-xl">
                   <Users class="w-5 h-5 text-amber-400" />
                 </div>
-                <h2 class="text-xl font-bold text-white">Waiting Payments</h2>
+                <h2 class="text-xl font-bold text-white">Pending Payments</h2>
               </div>
               <div class="text-sm text-gray-400">
-                {waitingPayments().length} payments
+                {pendingPayments().length} payments
               </div>
             </div>
             
-            {/* Empty state */}
-            {waitingPayments().length === 0 ? (
-              <div class="flex flex-col items-center justify-center h-64 text-center">
-                <div class="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mb-4">
-                  <Users class="w-8 h-8 text-amber-400" />
+            {pendingPayments().length === 0 ? (
+              <div class="flex items-center justify-center h-40 text-gray-500">
+                <div class="text-center">
+                  <Clock class="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                  <p>No pending payments</p>
+                  <p class="text-sm">All your bills are up to date!</p>
                 </div>
-                <p class="text-gray-300 font-medium mb-2">No Pending Payments</p>
-                <p class="text-gray-500 text-sm">Payments waiting for you will appear here</p>
               </div>
             ) : (
               <div class="max-h-80 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50">
-                {/* This section will be populated when there are waiting payments */}
+                <For each={pendingPayments()}>
+                  {(payment) => (
+                    <div class="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            {payment.avatar}
+                          </div>
+                          <div>
+                            <h3 class="text-white font-medium">{payment.from}</h3>
+                            <p class="text-gray-400 text-sm">{payment.description}</p>
+                            <p class="text-amber-400 text-xs">Due: {payment.dueDate}</p>
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <div class="text-white font-bold">{formatCurrency(payment.amount)}</div>
+                          <button class="text-amber-400 hover:text-amber-300 text-sm mt-1 hover:underline transition-colors">
+                            Remind
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </For>
               </div>
             )}
           </div>
 
-          {/* Latest Transactions - Empty State */}
+          {/* Recent Transactions */}
           <div class={`bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 hover:bg-gray-900/80 transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style="transition-delay: 1200ms">
             <div class="flex items-center justify-between mb-6">
               <div class="flex items-center gap-3">
                 <div class="p-2 bg-emerald-500/20 rounded-xl">
-                  <CreditCard class="w-5 h-5 text-emerald-400" />
+                  <Receipt class="w-5 h-5 text-emerald-400" />
                 </div>
-                <h2 class="text-xl font-bold text-white">Latest Transactions</h2>
+                <h2 class="text-xl font-bold text-white">Recent Transactions</h2>
               </div>
               <div class="text-sm text-gray-400">
-                {transactions().length} transactions
+                {recentTransactions().length} transactions
               </div>
             </div>
             
-            {/* Empty state */}
-            {transactions().length === 0 ? (
-              <div class="flex flex-col items-center justify-center h-64 text-center">
-                <div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
-                  <CreditCard class="w-8 h-8 text-emerald-400" />
+            {recentTransactions().length === 0 ? (
+              <div class="flex items-center justify-center h-40 text-gray-500">
+                <div class="text-center">
+                  <Receipt class="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                  <p>No recent transactions</p>
+                  <p class="text-sm">Start splitting bills to see your activity</p>
                 </div>
-                <p class="text-gray-300 font-medium mb-2">No Transactions Yet</p>
-                <p class="text-gray-500 text-sm">Your transaction history will appear here</p>
               </div>
             ) : (
               <div class="max-h-80 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50">
-                {/* This section will be populated when there are transactions */}
+                <For each={recentTransactions()}>
+                  {(transaction) => (
+                    <div class="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 hover:bg-gray-800/60 transition-all duration-300">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                          <div class={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            transaction.category === 'Food' ? 'bg-orange-500/20' :
+                            transaction.category === 'Entertainment' ? 'bg-purple-500/20' :
+                            transaction.category === 'Shopping' ? 'bg-blue-500/20' :
+                            'bg-green-500/20'
+                          }`}>
+                            {transaction.category === 'Food' ? '🍕' :
+                             transaction.category === 'Entertainment' ? '🎬' :
+                             transaction.category === 'Shopping' ? '🛍️' :
+                             '🚗'}
+                          </div>
+                          <div>
+                            <h3 class="text-white font-medium">{transaction.description}</h3>
+                            <p class="text-gray-400 text-sm">{transaction.date}</p>
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <div class="text-white font-bold">{formatCurrency(transaction.amount)}</div>
+                          <div class={`text-xs px-2 py-1 rounded-full mt-1 ${
+                            transaction.status === 'settled' 
+                              ? 'bg-emerald-500/20 text-emerald-400' 
+                              : 'bg-amber-500/20 text-amber-400'
+                          }`}>
+                            {transaction.status}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap gap-1">
+                        <For each={transaction.participants}>
+                          {(participant) => (
+                            <span class="text-xs bg-gray-700/50 text-gray-300 px-2 py-1 rounded-full">
+                              {participant}
+                            </span>
+                          )}
+                        </For>
+                      </div>
+                    </div>
+                  )}
+                </For>
               </div>
             )}
           </div>
