@@ -1,13 +1,13 @@
 import { createSignal, onMount } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
-  User, Settings, ChevronLeft, ChevronRight, Bell, Search,
-  Menu, X, LogOut, Sparkles, Plus, CreditCard, 
-  TrendingUp, Users, UserPlus, Receipt, Calendar, 
+  User, TrendingUp, Users, UserPlus, Receipt, Calendar, 
   DollarSign, Clock, Heart, Wallet, ArrowUp, Star,
   Award, Target, Activity, BarChart3, PieChart,
   CheckCircle, AlertCircle, Timer, Zap
 } from "lucide-solid";
+import Sidebar from "../layouts/Sidebar"; // Import komponen Sidebar
+import Header from "../layouts/Header";   // Import komponen Header
 
 export default function AccountPage() {
   const navigate = useNavigate();
@@ -15,6 +15,69 @@ export default function AccountPage() {
   const [isMobile, setIsMobile] = createSignal(false);
   const [animate, setAnimate] = createSignal(false);
   const [activeTab, setActiveTab] = createSignal("overview");
+  const [notifications, setNotifications] = createSignal([
+    {
+      id: 1,
+      type: "payment",
+      title: "Payment Received",
+      message: "Sarah paid $25.00 for dinner at Mario's",
+      time: "5 minutes ago",
+      read: false,
+      icon: "check"
+    },
+    {
+      id: 2,
+      type: "reminder",
+      title: "Bill Reminder",
+      message: "Monthly utilities bill is due in 2 days",
+      time: "1 hour ago",
+      read: false,
+      icon: "alert"
+    },
+    {
+      id: 3,
+      type: "info",
+      title: "New Friend Added",
+      message: "Mike has been added to your friends list",
+      time: "3 hours ago",
+      read: true,
+      icon: "user"
+    }
+  ]);
+
+  // Sample search data untuk header
+  const [searchData] = createSignal([
+    {
+      type: "bill",
+      title: "Dinner at Mario's",
+      subtitle: "$45.00 • Split with 3 friends",
+      date: "2024-08-10",
+      status: "active",
+      id: "bill-1"
+    },
+    {
+      type: "bill", 
+      title: "Monthly Utilities",
+      subtitle: "$125.00 • Personal expense",
+      date: "2024-08-09",
+      status: "paid",
+      id: "bill-2"
+    },
+    {
+      type: "friend",
+      title: "Sarah Johnson",
+      subtitle: "sarah@example.com",
+      status: "Paid",
+      id: "friend-1"
+    },
+    {
+      type: "friend",
+      title: "Mike Chen", 
+      subtitle: "mike@example.com",
+      status: "Pending",
+      id: "friend-2"
+    }
+  ]);
 
   const user = {
     name: "John Doe",
@@ -26,17 +89,6 @@ export default function AccountPage() {
     verified: true,
     level: "Gold Member"
   };
-
-  const navigationItems = [
-    { icon: Sparkles, label: "Dashboard", path: "/dashboard" },
-    { icon: TrendingUp, label: "Finance", path: "/finance" },
-    { icon: Plus, label: "Add Split Bill", path: "/addsplitbill" },
-    { icon: CreditCard, label: "Pay Bill", path: "/paybill" },
-    { icon: Users, label: "Friends", path: "/friends" },
-    { icon: UserPlus, label: "Add Friend", path: "/addfriend" },
-    { icon: User, label: "Account", path: "/account", active: true },
-    { icon: Settings, label: "Account Settings", path: "/accountsettings", submenu: true },
-  ];
 
   const achievements = [
     { icon: Award, title: "First Split", description: "Created your first split bill", earned: true },
@@ -64,7 +116,7 @@ export default function AccountPage() {
       participants: 3
     },
     {
-      icon: CreditCard,
+      icon: Receipt,
       title: "Monthly Utilities",
       time: "1 day ago",
       amount: "-$125.00",
@@ -103,14 +155,6 @@ export default function AccountPage() {
     return () => window.removeEventListener("resize", checkMobile);
   });
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen());
-
-  const handleLogout = () => {
-    if (confirm("Are you sure you want to log out?")) {
-      navigate("/login");
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed": return "emerald";
@@ -130,135 +174,23 @@ export default function AccountPage() {
         <div class="absolute top-1/3 right-1/4 w-64 h-64 bg-pink-200/4 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
-      {/* Mobile sidebar toggle */}
-      <button
-        onClick={toggleSidebar}
-        class="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-800/90 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/90 transition-all duration-300"
-      >
-        {isSidebarOpen() ? <X class="w-6 h-6" /> : <Menu class="w-6 h-6" />}
-      </button>
-
-      {/* Sidebar */}
-      <aside class={`fixed lg:relative bg-gray-900/90 backdrop-blur-xl border-r border-gray-700/50 flex flex-col transition-all duration-300 z-40 ${
-        isMobile() ? `w-80 ${isSidebarOpen() ? "translate-x-0" : "-translate-x-full"}` : `${isSidebarOpen() ? "w-80" : "w-20"}`
-      }`}>
-        {/* Header */}
-        <div class="p-6 border-b border-gray-700/50">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Sparkles class="w-6 h-6 text-gray-800" />
-            </div>
-            <div class={`transition-all duration-300 overflow-hidden ${
-              isSidebarOpen() ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}>
-              <h2 class="text-xl font-bold whitespace-nowrap">Split Bills</h2>
-              <p class="text-gray-400 text-sm whitespace-nowrap">Manage your expenses</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav class="flex-1 p-6 space-y-2">
-          {navigationItems.map((item) => (
-            <div class="relative group">
-              <button
-                onClick={() => navigate(item.path)}
-                class={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
-                  item.active 
-                    ? "bg-pink-200/10 text-pink-200 border border-pink-200/20" 
-                    : "text-gray-300 hover:bg-gray-800/50 hover:text-pink-200"
-                } ${!isSidebarOpen() ? "justify-center" : ""} ${
-                  item.submenu ? "ml-4" : ""
-                }`}
-              >
-                <item.icon class={`flex-shrink-0 ${item.submenu ? "w-4 h-4" : "w-5 h-5"}`} />
-                <span class={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${
-                  isSidebarOpen() ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-                } ${item.submenu ? "text-sm" : ""}`}>
-                  {item.label}
-                </span>
-              </button>
-              {!isSidebarOpen() && !isMobile() && (
-                <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                  {item.label}
-                  <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-                </div>
-              )}
-            </div>
-          ))}
-        </nav>
-
-        {/* Logout Button */}
-        <div class="p-6 pt-0">
-          <div class="relative group">
-            <button
-              onClick={handleLogout}
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 transition-all duration-300 ${
-                !isSidebarOpen() ? "justify-center" : ""
-              }`}
-            >
-              <LogOut class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${
-                isSidebarOpen() ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-              }`}>
-                Log Out
-              </span>
-            </button>
-            {!isSidebarOpen() && !isMobile() && (
-              <div class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                Log Out
-                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-800"></div>
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
-
-      {/* Mobile overlay */}
-      {isSidebarOpen() && isMobile() && (
-        <div
-          class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {/* Sidebar Component */}
+      <Sidebar 
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
+        isMobile={isMobile}
+      />
 
       {/* Main content */}
-      <main class={`flex-1 p-4 lg:p-8 space-y-6 lg:space-y-8 relative z-10 transition-all duration-300 ${
-        isMobile() ? 'ml-0' : ''
-      }`}>
-        {/* Header */}
-        <header class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pt-12 lg:pt-0">
-          <div class="flex items-center gap-2">
-            <button
-              onClick={toggleSidebar}
-              class="hidden lg:block p-2 bg-gray-800/90 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/90 transition-all duration-300"
-            >
-              {isSidebarOpen() ? <ChevronLeft class="w-5 h-5" /> : <ChevronRight class="w-5 h-5" />}
-            </button>
-            <div>
-              <h1 class={`text-3xl lg:text-4xl font-black bg-gradient-to-r from-white to-pink-200 bg-clip-text text-transparent transition-all duration-1000 ${
-                animate() ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
-              }`}>
-                My Account
-              </h1>
-              <p class="text-gray-400 mt-1">Manage your profile and track your activity</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
-            <button class="p-2 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/60 transition-all duration-300">
-              <Search class="w-5 h-5" />
-            </button>
-            <button class="p-2 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/60 transition-all duration-300">
-              <Bell class="w-5 h-5" />
-            </button>
-            <button
-              class="bg-gradient-to-r from-pink-200 to-pink-300 text-gray-900 px-6 py-3 rounded-xl font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg"
-              onClick={() => navigate("/accountsettings")}
-            >
-              Edit Profile
-            </button>
-          </div>
-        </header>
+      <main class={`flex-1 p-4 lg:p-8 space-y-6 lg:space-y-8 relative z-10 transition-all duration-300`}>
+        {/* Header Component */}
+        <Header 
+          title="My Account"
+          subtitle="Manage your profile and track your activity"
+          searchData={searchData}
+          notifications={notifications}
+          setNotifications={setNotifications}
+        />
 
         {/* Tab Navigation */}
         <div class={`flex flex-wrap gap-2 p-1 bg-gray-900/40 backdrop-blur-xl rounded-2xl border border-gray-700/50 transition-all duration-1000 ${
