@@ -1,6 +1,8 @@
 import { createSignal, onMount } from "solid-js";
-import { DollarSign, Users, Heart, TrendingUp, ChevronLeft, ChevronRight, Menu, X, Sparkles, Plus, UserPlus, Mail, Phone, ArrowLeft, Check, AlertCircle, LogOut, CreditCard, Settings, User} from "lucide-solid";
+import { UserPlus, Mail, Phone, ArrowLeft, Check, AlertCircle, Sparkles } from "lucide-solid";
 import { useNavigate } from "@solidjs/router";
+import Sidebar from "../layouts/Sidebar";
+import Header from "../layouts/Header";
 
 interface FormData {
   name: string;
@@ -35,6 +37,25 @@ interface Activity {
   date: string;
 }
 
+interface SearchResult {
+  type: string;
+  title: string;
+  subtitle: string;
+  date?: string;
+  status?: string;
+  id: string;
+}
+
+interface Notification {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  icon: string;
+}
+
 export default function AddFriendPage() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = createSignal(true);
@@ -52,6 +73,10 @@ export default function AddFriendPage() {
   const [showSuccess, setShowSuccess] = createSignal(false);
   const [errors, setErrors] = createSignal<FormErrors>({});
 
+  // Header data
+  const [notifications, setNotifications] = createSignal<Notification[]>([]);
+  const [searchData, setSearchData] = createSignal<SearchResult[]>([]);
+
   onMount(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -65,19 +90,46 @@ export default function AddFriendPage() {
     
     // Animation delay
     setTimeout(() => setAnimate(true), 100);
+
+    // Load notifications and search data
+    loadNotifications();
+    loadSearchData();
     
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
   });
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen());
+  const loadNotifications = () => {
+    try {
+      const stored = localStorage.getItem('notifications');
+      if (stored) {
+        setNotifications(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
   };
 
-  const handleLogout = () => {
-    if (confirm("Are you sure you want to log out?")) {
-      navigate("/login");
+  const loadSearchData = () => {
+    try {
+      // Load friends for search
+      const friends = JSON.parse(localStorage.getItem('split_bills_friends') || '[]');
+      const friendResults: SearchResult[] = friends.map((friend: Friend) => ({
+        type: 'friend',
+        title: friend.name,
+        subtitle: friend.email,
+        status: friend.status === 'owes_you' ? 'Owes You' : friend.status === 'you_owe' ? 'You Owe' : 'Settled',
+        id: friend.id
+      }));
+
+      // Load bills for search (if you have bills data)
+      // const bills = JSON.parse(localStorage.getItem('split_bills') || '[]');
+      // const billResults = bills.map(bill => ({ ... }));
+
+      setSearchData([...friendResults]);
+    } catch (error) {
+      console.error('Error loading search data:', error);
     }
   };
 
@@ -210,205 +262,28 @@ export default function AddFriendPage() {
         <div class="absolute top-1/3 right-1/4 w-64 h-64 bg-pink-200/4 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
-      {/* Mobile menu button */}
-      <button
-        onClick={toggleSidebar}
-        class="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-800/90 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/90 transition-all duration-300"
-      >
-        {isSidebarOpen() ? <X class="w-6 h-6" /> : <Menu class="w-6 h-6" />}
-      </button>
-
       {/* Sidebar */}
-      <aside class={`fixed lg:relative bg-gray-900/90 backdrop-blur-xl border-r border-gray-700/50 flex flex-col transition-all duration-300 z-40 ${
-        isMobile() 
-          ? `w-80 ${isSidebarOpen() ? 'translate-x-0' : '-translate-x-full'}`
-          : `${isSidebarOpen() ? 'w-80' : 'w-20'}`
-      }`}>
-        {/* Header */}
-        <div class="p-6 border-b border-gray-700/50">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-10 h-10 bg-gradient-to-br from-pink-200 to-pink-300 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Sparkles class="w-6 h-6 text-gray-800" />
-            </div>
-            <div class={`transition-all duration-300 overflow-hidden ${
-              isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-            }`}>
-              <h2 class="text-xl font-bold whitespace-nowrap">Split Bills</h2>
-              <p class="text-gray-400 text-sm whitespace-nowrap">Manage your expenses</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav class="flex-1 p-6 space-y-2">
-          {/* Dashboard */}
-          <div class="relative group">
-            <button 
-              onClick={() => navigate("/dashboard")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <Sparkles class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Dashboard</span>
-            </button>
-          </div>
-
-          {/* Finance */}
-          <div class="relative group">
-            <button 
-              onClick={() => navigate("/finance")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <TrendingUp class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Finance</span>
-            </button>
-          </div>
-
-          {/* Add Split Bill */}
-          <div class="relative group">
-            <button 
-              onClick={() => navigate("/addsplitbill")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <Plus class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Add Split Bill</span>
-            </button>
-          </div>
-
-          {/* Pay Bill */}
-          <div class="relative group">
-            <button 
-              onClick={() => navigate("/paybill")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <CreditCard class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Pay Bill</span>
-            </button>
-          </div>
-
-          {/* Friends */}
-          <div class="relative group">
-            <button 
-              onClick={() => navigate("/friends")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <Users class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Friends</span>
-            </button>
-          </div>
-
-          {/* Add Friend */}
-          <div class="relative group">
-            <button 
-              onClick={() => navigate("/addfriend")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl bg-pink-500/10 text-pink-200 border border-pink-500/20 transition-all duration-300 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <UserPlus class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Add Friend</span>
-            </button>
-          </div>
-
-          {/* Account */}
-          <div class="relative group">
-            <button 
-              onClick={() => navigate("/account")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-pink-200 transition-all duration-300 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <User class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Account</span>
-            </button>
-          </div>
-
-          {/* Account Settings - Submenu */}
-          <div class="relative group ml-4">
-            <button 
-              onClick={() => navigate("/accountsettings")} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-gray-800/30 hover:text-pink-200 transition-all duration-300 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <Settings class="w-4 h-4 flex-shrink-0" />
-              <span class={`font-medium text-sm transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Account Settings</span>
-            </button>
-          </div>
-        </nav>
-
-        {/* Logout Button */}
-        <div class="p-6 border-t border-gray-700/50">
-          <div class="relative group">
-            <button 
-              onClick={handleLogout} 
-              class={`w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 border border-red-500/20 hover:border-red-500/40 ${
-                !isSidebarOpen() ? 'justify-center' : ''
-              }`}
-            >
-              <LogOut class="w-5 h-5 flex-shrink-0" />
-              <span class={`font-medium transition-all duration-300 overflow-hidden ${
-                isSidebarOpen() ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
-              }`}>Log Out</span>
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Overlay for mobile */}
-      {isSidebarOpen() && isMobile() && (
-        <div
-          class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        setIsOpen={setIsSidebarOpen} 
+        isMobile={isMobile}
+      />
 
       {/* Main content */}
       <main class={`flex-1 p-4 lg:p-8 space-y-6 lg:space-y-8 relative z-10 transition-all duration-300 ${
         isMobile() ? 'ml-0' : ''
       }`}>
         {/* Header */}
-        <header class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pt-12 lg:pt-0">
-          <div class="flex items-center gap-2">
-            {/* Desktop sidebar toggle button */}
-            <button
-              onClick={toggleSidebar}
-              class="hidden lg:block p-2 bg-gray-800/90 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:bg-gray-700/90 transition-all duration-300"
-            >
-              {isSidebarOpen() ? <ChevronLeft class="w-5 h-5" /> : <ChevronRight class="w-5 h-5" />}
-            </button>
-            <div>
-              <h1 class={`text-3xl lg:text-4xl font-black bg-gradient-to-r from-white to-pink-200 bg-clip-text text-transparent transition-all duration-1000 ${animate() ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
-                Add Friend
-              </h1>
-              <p class="text-gray-400 mt-1">Add a new friend to split bills with</p>
-            </div>
-          </div>
+        <Header 
+          title="Add Friend"
+          subtitle="Add a new friend to split bills with"
+          searchData={searchData}
+          notifications={notifications}
+          setNotifications={setNotifications}
+        />
+
+        {/* Back Button */}
+        <div class="flex justify-start">
           <button 
             onClick={() => navigate("/friends")}
             class="flex items-center gap-2 text-gray-400 hover:text-pink-200 transition-all duration-300"
@@ -416,7 +291,7 @@ export default function AddFriendPage() {
             <ArrowLeft class="w-4 h-4" />
             Back to Friends
           </button>
-        </header>
+        </div>
 
         {/* Success Message */}
         {showSuccess() && (
@@ -455,7 +330,7 @@ export default function AddFriendPage() {
                   placeholder="Enter friend's full name"
                 />
                 <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <Users class="w-5 h-5 text-gray-400" />
+                  <UserPlus class="w-5 h-5 text-gray-400" />
                 </div>
               </div>
               {errors().name && (
