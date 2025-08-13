@@ -79,12 +79,12 @@ export default function SplitBillLanding() {
   // Navigation functions
   const navigateToLogin = () => {
     // Arahkan ke halaman login yang sudah Anda buat
-    window.location.href = '../pages/login';
+    window.location.href = '/login';
   };
 
   const navigateToSignUp = () => {
     // Arahkan ke halaman register yang sudah Anda buat  
-    window.location.href = '../pages/register';
+    window.location.href = '/register';
   };
 
   const pricingPlans = [
